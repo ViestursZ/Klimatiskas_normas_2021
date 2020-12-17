@@ -7,8 +7,6 @@ library(tidyverse)
 
 # Exporting data ----------------------------------------------------------
 
-parameters <- c("HTDRY", "TDRY", "MTDRY")
-
 export_data <- function(parameters, stacijas = NA) {
   con <- source("P:/KMN/Kodi/Clidata_connection.r")
   parameters_for <- paste0("'", parameters, "',", collapse = " ") %>% str_sub(1, nchar(.)-1)
@@ -20,9 +18,11 @@ export_data <- function(parameters, stacijas = NA) {
   }
   query <- paste0("SELECT * FROM CLIDATA.RDATA WHERE RDATA.EG_EL_ABBREVIATION IN (",
                   parameters_for, ")", stacijas_condition, ";")
-  sqlQuery(con[[1]], query, stringsAsFactors = F, dec = ",")
+  data <- sqlQuery(con[[1]], query, stringsAsFactors = F, dec = ",")
   odbcClose(con[[1]])
+  return(data)
 }
 
-
-
+parameters <- c("HTDRY", "TDRY", "MTDRY")
+temp_data <- export_data(parameters = parameters)
+write_rds(temp_data, "Dati/Temp_dati_neapstradati.rds")
