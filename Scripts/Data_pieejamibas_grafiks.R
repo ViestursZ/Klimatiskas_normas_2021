@@ -5,6 +5,7 @@ library(RODBC)
 library(tidyverse)
 library(magrittr)
 library(lubridate)
+library(RcppRoll)
 
 # Ielādē funkcijas --------------------------------------------------------
 
@@ -45,4 +46,21 @@ temp_data_ur <- temp_data_ur %>%
   gather(Stacija, Merijums)
 
 # Apstrādā regular datus
+temp_data_r <- temp_data_r %>%
+  tidy_hourly()
 
+r_params <- unique(temp_data_r$Parametrs)
+temp_data_r_ls <- map(r_params, ~ filter(temp_data_r, Parametrs == .x))
+
+names(temp_data_r_ls) <- r_params
+
+mer_skaits_test <- temp_data_r_ls[[1]] %>%
+  mutate(Datums = date(Datums_laiks)) %>%
+  group_by(Stacija, Datums) %>%
+  summarise(Mer_skaits = n())
+
+mer_skaits_test %>%
+  arrange(Stacija, Datums) %>%
+  group_by(Stacija) %>%  
+  mutate(Mer_skaits_roll = round(roll_meanr(Mer_skaits, n = 30))) %$%
+  table(Mer_skaits_roll)
