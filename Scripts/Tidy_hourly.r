@@ -8,7 +8,7 @@ tidy_hourly <- function(df, to_LV_time = F) {
   # to_LV_time- TRUE vai FALSE, kas apzīmē vai ir nepieciešamība pāriet uz 
   #             Latvijas laiku
   df  <- df %>%
-    gather(key = DIENA, value = Merijums, -c(1:5)) %>%
+    gather(key = DIENA, value = Merijums, -c(1:6)) %>%
     mutate(Datums_laiks = str_c(YEAR, "-", MONTH, "-", 
                                 str_replace(DIENA, "[:alpha:]+", ""), " ", TIME),
            Datums_laiks = ymd_hm(Datums_laiks)) %>%
