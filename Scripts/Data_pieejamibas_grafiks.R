@@ -69,6 +69,58 @@ mer_skaits_test <- temp_data_r_ls[[1]] %>%
 # Iegūst pirmos datumus, kad mērījumi TDRY parametram katrā stacijā nav NA
 temp_stacijas <- unique(mer_skaits_test$Stacija)
 
+ur_cut_dates <- map(temp_stacijas, function(x) {
+  dat <- mer_skaits_test %>%
+    filter(Stacija == x) %>%
+    filter(!is.na(Mer_skaits)) %>%
+    arrange(Datums) %>%
+    slice(1) %>%
+    pull(Datums)
+  return(dat)
+}) %>%
+  unlist() %>%
+  as_date()
+
+ur_cut_dates <- tibble(Stacija = temp_stacijas, cut_date = ur_cut_dates)
+
+# Cutto regular datus pirmajā daļā
+mer_skaits_test <- map2(temp_stacijas, ur_cut_dates, function(x, y) {
+  mer_skaits_test %>%
+    filter(Stacija == x & Datums >= y)
+})
+
+# Cutto ur datus, līdz ur_cut_dates, kā arī croppo NA sākumā
+ur_list <- map2(temp_stacijas, ur_cut_dates, function(stac, cutd) {
+  temp_data_ur %>%
+    filter(Stacija == stac) %>%
+    filter(!is.na(Merijums)) %>%
+    filter(Datums >= min(Datums)) %>% 
+    filter(Datums < cutd)
+})
+  
+
+ur_list
+mer_skaits_test
+
+extract_start_date <- function(df, stacija, datcol = "Datums") {
+  stac_df <- filter(df, Stacija == stacija)
+  datums <- stac_df %>%
+    filter(Stacija == stacija) %>%
+    filter(!is.na(Merijums)) %>%
+    filter(!!sym(datcol) == min(!!sym(datcol))) %>%
+    pull(!!sym(datcol))
+  return(datums)
+}
+
+# Extracto pārejo parametru sākuma datumus
+HTDRY_start <- map(temp_stacijas, extract_start_date, df = temp_data_r_ls[[2]], datcol = "Datums_laiks")
+MTDRY_start <- map(temp_stacijas, extract_start_date, df = temp_data_r_ls[[2]], datcol = "Datums_laiks")
+
+# Viss ir temp_stacijas secībā
+
+# Grafika piemērs ---------------------------------------------------------
+
+
 mer_skaits_test %>%
   filter(Stacija == "RIAI99PA") %>%
   ggplot() + 
