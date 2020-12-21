@@ -14,7 +14,7 @@ source("Scripts/Tidy_hourly.r", encoding = "UTF-8")
 
 # Ielādē datus ------------------------------------------------------------
 
-# temp_data <- read_rds("Dati/temp_data.rds")
+temp_data <- read_rds("Dati/Temp_dati_neapstradati.rds")
 
 # Sakārto datus -----------------------------------------------------------
 
@@ -43,7 +43,7 @@ datumi <- data.frame(Datums = datumi)
 temp_data_ur <- temp_data_ur %>%
   spread(Stacija, Merijums) %>%
   left_join(datumi, .) %>%
-  gather(Stacija, Merijums)
+  gather(Stacija, Merijums, -Parametrs, -Datums)
 
 # Apstrādā regular datus
 temp_data_r <- temp_data_r %>%
@@ -54,13 +54,22 @@ temp_data_r_ls <- map(r_params, ~ filter(temp_data_r, Parametrs == .x))
 
 names(temp_data_r_ls) <- r_params
 
+# Iegūst mērījumu skaitu pa dienām un stacijām
 mer_skaits_test <- temp_data_r_ls[[1]] %>%
   mutate(Datums = date(Datums_laiks)) %>%
   group_by(Stacija, Datums) %>%
   summarise(Mer_skaits = n())
 
+# mer_skaits_test %>%
+#   arrange(Stacija, Datums) %>%
+#   group_by(Stacija) %$%  
+#   # mutate(Mer_skaits_roll = round(roll_meanr(Mer_skaits, n = 30))) %$%
+#   table(Mer_skaits)
+
+# Iegūst pirmos datumus, kad mērījumi TDRY parametram katrā stacijā nav NA
+temp_stacijas <- unique(mer_skaits_test$Stacija)
+
 mer_skaits_test %>%
-  arrange(Stacija, Datums) %>%
-  group_by(Stacija) %>%  
-  mutate(Mer_skaits_roll = round(roll_meanr(Mer_skaits, n = 30))) %$%
-  table(Mer_skaits_roll)
+  filter(Stacija == "RIAI99PA") %>%
+  ggplot() + 
+  geom_line(aes(Datums, Mer_skaits))
