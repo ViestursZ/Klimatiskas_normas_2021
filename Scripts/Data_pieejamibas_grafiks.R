@@ -81,7 +81,7 @@ ur_cut_dates <- map(temp_stacijas, function(x) {
   unlist() %>%
   as_date()
 
-ur_cut_dates <- tibble(Stacija = temp_stacijas, cut_date = ur_cut_dates)
+# ur_cut_dates <- tibble(Stacija = temp_stacijas, cut_date = ur_cut_dates)
 
 # Cutto regular datus pirmajā daļā
 mer_skaits_test <- map2(temp_stacijas, ur_cut_dates, function(x, y) {
@@ -114,14 +114,54 @@ extract_start_date <- function(df, stacija, datcol = "Datums") {
 
 # Extracto pārejo parametru sākuma datumus
 HTDRY_start <- map(temp_stacijas, extract_start_date, df = temp_data_r_ls[[2]], datcol = "Datums_laiks")
-MTDRY_start <- map(temp_stacijas, extract_start_date, df = temp_data_r_ls[[2]], datcol = "Datums_laiks")
+MTDRY_start <- map(temp_stacijas, extract_start_date, df = temp_data_r_ls[[3]], datcol = "Datums_laiks")
 
-# Viss ir temp_stacijas secībā
+HTDRY_start <- HTDRY_start %>% unlist() %>% as_datetime() %>% as_date()
+MTDRY_start <- MTDRY_start %>% unlist() %>% as_datetime() %>% as_date()
+
+# Apvieno ur_list un Mer_skaits_test
 
 # Grafika piemērs ---------------------------------------------------------
 
+temp_stacijas[4]
+mer_skaits_test[[4]]
+ur_cut_dates[4]
+HTDRY_start[4]
+MTDRY_start[4]
 
-mer_skaits_test %>%
-  filter(Stacija == "RIAI99PA") %>%
-  ggplot() + 
-  geom_line(aes(Datums, Mer_skaits))
+for (i in seq_along(temp_stacijas)) {
+  
+  graph_df <- ur_list[[i]] %>%
+    mutate(Mer_skaits = 1) %>%
+    select(Datums, Stacija, Mer_skaits) %>%
+    bind_rows(mer_skaits_test[[i]])
+  
+  # Pievieno iztrūkumus
+  graph_datumi <- tibble(Datums = seq.Date(min(graph_df$Datums), max(graph_df$Datums), by = "day"))
+  
+  # Joino iztrūkumus
+  graph_df <- graph_df %>%
+    left_join(graph_datumi, .)
+  
+  ggplot(graph_df) +
+    geom_line(aes(Datums, Mer_skaits), na.rm = F, size = 4, color = "black") + 
+    ggtitle(paste0(temp_stacijas[i], " gaisa temperatūras novērojumi")) +
+    geom_vline(xintercept = HTDRY_start[i], linetype = "longdash", col = "dark blue", size = 1.2) + 
+    geom_vline(xintercept = ur_cut_dates[i], linetype = "longdash", col = "dark green", size = 1.2) +
+    geom_vline(xintercept = MTDRY_start[i], linetype = "longdash", col = "dark red", size = 1.2) +
+    annotate(geom = "text", label = paste0("HTDRY\nsākums\n", HTDRY_start[i]),
+             x = HTDRY_start[i] - 4000, y = 26.5, col = "dark blue") +
+    annotate(geom = "text", label = paste0("MTDRY\nsākums\n", MTDRY_start[i]),
+             x = MTDRY_start[i] + 4500, y = 26.5, col = "dark red") +
+    annotate(geom = "text", label = paste0("Termiņ-\nnovērojumu\nsākums\n", ur_cut_dates[i]),
+             x = MTDRY_start[i] - 8000, y = 15.5, col = "dark green") +
+    scale_x_date(limits = c(NA_Date_, ymd("2035-01-01"))) +
+    scale_y_continuous(limits = c(0, 28), name = "Mērījumu skaits") +
+    theme_bw() +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    ggsave(paste0("Grafiki/Parametru_analize/Temperatura/", temp_stacijas[i], ".png"))
+  
+}
+
+
+             
