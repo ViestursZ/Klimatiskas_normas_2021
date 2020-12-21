@@ -130,7 +130,7 @@ HTDRY_start[4]
 MTDRY_start[4]
 
 for (i in seq_along(temp_stacijas)) {
-  
+  # i <- 4
   graph_df <- ur_list[[i]] %>%
     mutate(Mer_skaits = 1) %>%
     select(Datums, Stacija, Mer_skaits) %>%
@@ -138,30 +138,66 @@ for (i in seq_along(temp_stacijas)) {
   
   # Pievieno iztrūkumus
   graph_datumi <- tibble(Datums = seq.Date(min(graph_df$Datums), max(graph_df$Datums), by = "day"))
+  ran <- range(graph_datumi$Datums)
+  ran_idx <- ran[2] - ran[1]
   
   # Joino iztrūkumus
   graph_df <- graph_df %>%
     left_join(graph_datumi, .)
   
+  ranmax <- ran[2] + 0.12 * ran_idx
+  ranmin <- ran[1] - 0.11 * ran_idx
+  
+  par1x <- HTDRY_start[i] - 0.1 * ran_idx
+  if (par1x < ranmin + 730) par1x <- ranmin + 730
+  if (par1x > ranmax - 730) par1x <- ranmax - 730
+  
+  par2x <- MTDRY_start[i] + 0.1 * ran_idx
+  if (par2x < ranmin + 730) par2x <- ranmin + 730
+  if (par2x > ranmax - 730) par2x <- ranmax - 730
+  
+  par3x <- ur_cut_dates[i] - 0.1 * ran_idx
+  if (par3x < ranmin + 730) par3x <- ranmin + 730
+  if (par3x > ranmax - 730) par3x <- ranmax - 730
+  
   ggplot(graph_df) +
-    geom_line(aes(Datums, Mer_skaits), na.rm = F, size = 4, color = "black") + 
+    geom_line(aes(Datums, Mer_skaits), na.rm = F, size = 2, color = "black") + 
     ggtitle(paste0(temp_stacijas[i], " gaisa temperatūras novērojumi")) +
     geom_vline(xintercept = HTDRY_start[i], linetype = "longdash", col = "dark blue", size = 1.2) + 
     geom_vline(xintercept = ur_cut_dates[i], linetype = "longdash", col = "dark green", size = 1.2) +
     geom_vline(xintercept = MTDRY_start[i], linetype = "longdash", col = "dark red", size = 1.2) +
     annotate(geom = "text", label = paste0("HTDRY\nsākums\n", HTDRY_start[i]),
-             x = HTDRY_start[i] - 4000, y = 26.5, col = "dark blue") +
+             x = par1x, y = 26.5, col = "dark blue") +
     annotate(geom = "text", label = paste0("MTDRY\nsākums\n", MTDRY_start[i]),
-             x = MTDRY_start[i] + 4500, y = 26.5, col = "dark red") +
+             x = par2x, y = 26.5, col = "dark red") +
     annotate(geom = "text", label = paste0("Termiņ-\nnovērojumu\nsākums\n", ur_cut_dates[i]),
-             x = MTDRY_start[i] - 8000, y = 15.5, col = "dark green") +
-    scale_x_date(limits = c(NA_Date_, ymd("2035-01-01"))) +
+             x = par3x, y = 15.5, col = "dark green", ) +
+    scale_x_date(limits = c(ranmin, ranmax)) +
     scale_y_continuous(limits = c(0, 28), name = "Mērījumu skaits") +
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5)) +
     ggsave(paste0("Grafiki/Parametru_analize/Temperatura/", temp_stacijas[i], ".png"))
-  
 }
 
+ggplot(graph_df) +
+  geom_line(aes(Datums, Mer_skaits), na.rm = F, size = 2, color = "black") + 
+  ggtitle(paste0(temp_stacijas[i], " gaisa temperatūras novērojumi")) +
+  geom_vline(xintercept = HTDRY_start[i], linetype = "longdash", col = "dark blue", size = 1.2) + 
+  geom_vline(xintercept = ur_cut_dates[i], linetype = "longdash", col = "dark green", size = 1.2) +
+  geom_vline(xintercept = MTDRY_start[i], linetype = "longdash", col = "dark red", size = 1.2) +
+  annotate(geom = "text", label = paste0("HTDRY\nsākums\n", HTDRY_start[i]),
+           xmin = ran[1] - 0.11 * ran_idx, x = HTDRY_start[i] - 0.1 * ran_idx, 
+           xmax = HTDRY_start[i], y = 26.5, col = "dark blue") +
+  annotate(geom = "text", label = paste0("MTDRY\nsākums\n", MTDRY_start[i]),
+           xmin = MTDRY_start[i], x = MTDRY_start[i] +  0.1 * ran_idx, 
+           xmax = ran[1] + 0.11 * ran_idx, y = 26.5, col = "dark red") +
+  annotate(geom = "text", label = paste0("Termiņ-\nnovērojumu\nsākums\n", ur_cut_dates[i]),
+           xmin = ran[1] - 0.11 * ran_idx, x = ur_cut_dates[i] -  0.1 * ran_idx,
+           xmax = ur_cut_dates[i], y = 15.5, col = "dark green", ) +
+  scale_x_date(limits = c(ran[1] - 0.11 * ran_idx, ran[2] + 0.12 * ran_idx)) +
+  scale_y_continuous(limits = c(0, 28), name = "Mērījumu skaits") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+  ggsave(paste0("Grafiki/Parametru_analize/Temperatura/", temp_stacijas[i], ".png"))
 
              
