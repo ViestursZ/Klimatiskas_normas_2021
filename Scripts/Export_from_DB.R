@@ -26,3 +26,19 @@ export_data <- function(parameters, stacijas = NA) {
 parameters <- c("HTDRY", "TDRY", "MTDRY")
 temp_data <- export_data(parameters = parameters)
 write_rds(temp_data, "Dati/Temp_dati_neapstradati.rds")
+
+nokr_parameter <- c("HPRAB", "PRAB", "MPRAB")
+nokr_data <- export_data(parameters = parameters)
+write_rds(nokr_data, "Dati/nokr_dati_neapstradati.rds")
+
+min_temp_par <- c("ATMN", "HATMN", "MATMN")
+min_temp_data <- export_data(parameters = min_temp_par)
+write_rds(min_temp_data, "Dati/min_temp_dati_neapstradati.rds")
+
+max_temp_par <- c("ATMX", "HATMX", "MATMX")
+max_temp_data <- export_data(parameters = max_temp_par)
+write_rds(max_temp_data, "Dati/max_temp_dati_neapstradati.rds")
+
+mean_wind <- c("HMWNS", "HWNDS", "WNS10", "MWNDS")
+mean_wind_data <- export_data(parameters = mean_wind)
+write_rds(mean_wind_data, "Dati/mean_wind_dati_neapstradati.rds")

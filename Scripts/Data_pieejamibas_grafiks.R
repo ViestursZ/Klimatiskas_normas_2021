@@ -148,17 +148,19 @@ for (i in seq_along(temp_stacijas)) {
   ranmax <- ran[2] + 0.12 * ran_idx
   ranmin <- ran[1] - 0.11 * ran_idx
   
+  ran_diff <- 0.05 * as.numeric(ran_idx)
+  
   par1x <- HTDRY_start[i] - 0.1 * ran_idx
-  if (par1x < ranmin + 730) par1x <- ranmin + 730
-  if (par1x > ranmax - 730) par1x <- ranmax - 730
+  if (par1x < ranmin + ran_diff) par1x <- ranmin + ran_diff
+  if (par1x > ranmax - ran_diff) par1x <- ranmax - ran_diff
   
   par2x <- MTDRY_start[i] + 0.1 * ran_idx
-  if (par2x < ranmin + 730) par2x <- ranmin + 730
-  if (par2x > ranmax - 730) par2x <- ranmax - 730
+  if (par2x < ranmin + ran_diff) par2x <- ranmin + ran_diff
+  if (par2x > ranmax - ran_diff) par2x <- ranmax - ran_diff
   
   par3x <- ur_cut_dates[i] - 0.1 * ran_idx
-  if (par3x < ranmin + 730) par3x <- ranmin + 730
-  if (par3x > ranmax - 730) par3x <- ranmax - 730
+  if (par3x < ranmin + ran_diff) par3x <- ranmin + ran_diff
+  if (par3x > ranmax - ran_diff) par3x <- ranmax - ran_diff
   
   ggplot(graph_df) +
     geom_line(aes(Datums, Mer_skaits), na.rm = F, size = 2, color = "black") + 
@@ -167,11 +169,11 @@ for (i in seq_along(temp_stacijas)) {
     geom_vline(xintercept = ur_cut_dates[i], linetype = "longdash", col = "dark green", size = 1.2) +
     geom_vline(xintercept = MTDRY_start[i], linetype = "longdash", col = "dark red", size = 1.2) +
     annotate(geom = "text", label = paste0("HTDRY\nsākums\n", HTDRY_start[i]),
-             x = par1x, y = 26.5, col = "dark blue") +
+             x = par1x, y = 26.5, col = "dark blue", size = 4) +
     annotate(geom = "text", label = paste0("MTDRY\nsākums\n", MTDRY_start[i]),
-             x = par2x, y = 26.5, col = "dark red") +
+             x = par2x, y = 21, col = "dark red", size = 4) +
     annotate(geom = "text", label = paste0("Termiņ-\nnovērojumu\nsākums\n", ur_cut_dates[i]),
-             x = par3x, y = 15.5, col = "dark green", ) +
+             x = par3x, y = 15.5, col = "dark green", size = 4) +
     scale_x_date(limits = c(ranmin, ranmax)) +
     scale_y_continuous(limits = c(0, 28), name = "Mērījumu skaits") +
     theme_bw() +
