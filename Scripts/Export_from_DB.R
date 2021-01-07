@@ -28,7 +28,7 @@ temp_data <- export_data(parameters = parameters)
 write_rds(temp_data, "Dati/Temp_dati_neapstradati.rds")
 
 nokr_parameter <- c("HPRAB", "PRAB", "MPRAB")
-nokr_data <- export_data(parameters = parameters)
+nokr_data <- export_data(parameters = nokr_parameter)
 write_rds(nokr_data, "Dati/nokr_dati_neapstradati.rds")
 
 min_temp_par <- c("ATMN", "HATMN", "MATMN")
@@ -42,3 +42,7 @@ write_rds(max_temp_data, "Dati/max_temp_dati_neapstradati.rds")
 mean_wind <- c("HMWNS", "HWNDS", "WNS10", "MWNDS")
 mean_wind_data <- export_data(parameters = mean_wind)
 write_rds(mean_wind_data, "Dati/mean_wind_dati_neapstradati.rds")
+
+max_wind_par <- c("HWSMX", "WPGSB", "MWSMX")
+max_wind_data <- export_data(max_wind_par)
+write_rds(max_wind_data, "Dati/max_wind_dati_neapstradati.rds")

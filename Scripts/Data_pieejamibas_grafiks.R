@@ -119,7 +119,6 @@ MTDRY_start <- map(temp_stacijas, extract_start_date, df = temp_data_r_ls[[3]], 
 HTDRY_start <- HTDRY_start %>% unlist() %>% as_datetime() %>% as_date()
 MTDRY_start <- MTDRY_start %>% unlist() %>% as_datetime() %>% as_date()
 
-# Apvieno ur_list un Mer_skaits_test
 
 # Grafika piemērs ---------------------------------------------------------
 
