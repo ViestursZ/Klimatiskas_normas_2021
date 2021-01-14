@@ -17,6 +17,8 @@ temp_data <- read_rds("Dati/Temp_dati_neapstradati.rds")
 min_temp_data <- read_rds("Dati/min_temp_dati_neapstradati.rds")
 max_temp_data <- read_rds("Dati/max_temp_dati_neapstradati.rds")
 
+# metadati
+metadata <- read_rds("Dati/station_metadata.rds")
 
 # Datu kārtošana ----------------------------------------------------------
 # Kādi regular parametri ir?
@@ -62,7 +64,42 @@ tidy_datasets <- function(data, funreg = "AVG") {
 temp_data <- temp_data %>%
   tidy_datasets(funreg = "AVG")
 
-temp_data$r
+# Extract vajadzīgās stacijas
+extract_stations <- function(data) {
+  stations <- c(unique(data$r$Stacija),
+                unique(data$ur$Stacija)[!(data$ur %$% unique(Stacija)) %in% unique(data$r$Stacija)])
+  return(stations)
+}
+
+temp_stacijas <- extract_stations(temp_data)
+
+# Metadata cleaning -------------------------------------------------------
+# Remove REGULAR = N, bet stundu dati
+# Atfiltrē arī tikai termiņu datus
+metadata <- metadata %>%
+  filter(!(REGULAR == "N" & str_detect(EG_EL_ABBREVIATION, "^H"))) %>%
+  dplyr::select(EG_GH_ID, EG_EL_ABBREVIATION, REGULAR, BEGIN_DATE, END_DATE, TS_ID, TI_INTERVAL) %>%
+  mutate(BEGIN_DATE = force_tz(BEGIN_DATE, "UTC"),
+         END_DATE = force_tz(END_DATE, "UTC"))
+
+filter_meta <- function(metad, stacs, params) {
+  metad %>%
+    filter(EG_GH_ID %in% stacs) %>%
+    filter(EG_EL_ABBREVIATION %in% params) %>%
+    arrange(EG_GH_ID, BEGIN_DATE)
+}
+
+
+temp_meta <- metadata %>% filter_meta(temp_stacijas, c("TDRY", "HTDRY", "MTDRY"))
+
+
+
+
+
+
+
+
+
 
 
 # Pievieno instrūkstošās dienas

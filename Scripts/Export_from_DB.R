@@ -46,3 +46,33 @@ write_rds(mean_wind_data, "Dati/mean_wind_dati_neapstradati.rds")
 max_wind_par <- c("HWSMX", "WPGSB", "MWSMX")
 max_wind_data <- export_data(max_wind_par)
 write_rds(max_wind_data, "Dati/max_wind_dati_neapstradati.rds")
+
+
+# Export metadata ---------------------------------------------------------
+
+con <- source("P:/KMN/Kodi/Clidata_connection.r")
+
+query <- paste0(
+  "select * from st_observation
+  order by eg_gh_id")
+
+metadata <- sqlQuery(con[[1]], query,
+                     stringsAsFactors = F)
+
+write_rds(metadata, "Dati/station_metadata.rds")
+odbcClose(con[[1]])
+
+#### Geography data ####
+query <- paste0(
+  "select * from geography
+  where gh_id in (",
+  stac_query,
+  ")
+  order by gh_id")
+
+geography_data <- sqlQuery(channel[[1]], query,
+                           stringsAsFactors = F)
+
+write_rds(geography_data, "Data/geog_data.rds")
+odbcClose(channel[[1]])
+
