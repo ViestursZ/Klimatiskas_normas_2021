@@ -89,33 +89,147 @@ filter_meta <- function(metad, stacs, params) {
     arrange(EG_GH_ID, BEGIN_DATE)
 }
 
-
+# Fun call
 temp_meta <- metadata %>% filter_meta(temp_stacijas, c("TDRY", "HTDRY", "MTDRY"))
 
 
+# Extract start date H parametram
+H_starts <- function(data) {
+  # extract the start date for hourly parameters. Uses extract_start_date function
+  data$r %>%
+  filter(str_detect(Parametrs, "^H")) %>%
+  group_by(Stacija) %>%
+  extract_start_date()
+}
+
+# Fun call
+Hpar_starts <- H_starts(temp_data)
+
+# Extract start date regular parametram
+Ur_starts <- function(data) {
+  # Extract the start date for unregular parameters. Uses extract_start_date function
+  data$r %>%
+    filter(!(str_detect(Parametrs, "^H") | str_detect(Parametrs, "^M"))) %>%
+    group_by(Stacija) %>%
+    extract_start_date()
+}
+
+# Fun call
+Urpar_starts <- Ur_starts(temp_data)
+
+
+# Extract relevant metadata terms and relevant term data
+metalist_termini <- list()
+
+for (i in 1:nrow(Hpar_starts)) {
+  Stacija <- Hpar_starts[i, "Stacija", drop = T]
+  Datums_laiks <- Hpar_starts[i, "Datums_laiks", drop = T]
+  metalist_termini[[i]] <- temp_meta_r %>%
+    filter(!str_detect(EG_EL_ABBREVIATION, "^H") | str_detect(EG_EL_ABBREVIATION,"^M")) %>%
+    filter(EG_GH_ID == Stacija & BEGIN_DATE < Datums_laiks)
+}
+
+termini_data <- temp_data$r %>%
+  filter(!(str_detect(Parametrs, "^H") | str_detect(Parametrs,"^M")))
+
+# Filter terms according to metadata terms; Add the missing rows with no data
+datalist_termini <- list()
+for (j in seq_along(metalist_termini)) {
+  
+  # Skip, ja nav termiņu metadatu
+  if (nrow(metalist_termini[[j]]) == 0) {
+    next()
+  }
+  meta_stac <- metalist_termini[[j]] %$% unique(EG_GH_ID)
+  terms <- termini_data %>%
+    filter(Stacija == meta_stac)
+  
+  staclist <- list()
+  for (i in 1:nrow(metalist_termini[[j]])) {
+    # Termiņu sākums
+    term_sakums <- metalist_termini[[j]][i, "BEGIN_DATE", drop = T]
+    term_beigas <- metalist_termini[[j]][i, "END_DATE", drop = T]
+    
+    # Time interval
+    ti <- metalist_termini[[j]][i, "TI_INTERVAL", drop = T] %>%
+      str_remove("^0") %>%
+      str_remove(":00") %>%
+      as.numeric()
+    
+    # Time interval skaits pārbaudei
+    ti_skaits <- 24 / ti
+    
+    df <- terms %>%
+      filter(Datums_laiks >= term_sakums & Datums_laiks <= term_beigas)
+    
+    # Ja nu df ir tukšs
+    if (nrow(df) == 0) {
+      staclist[[i]] <- df
+      next
+    }
+    
+    # Stundas in time interval
+    df_stundas <- df %>%
+      mutate(Stunda = hour(Datums_laiks)) %$%
+      unique(Stunda)
+    
+    # Salīdzina stundu skaitu ar interval skaitu; ja nesakrīt, izvelk biežākās stundas termiņā
+    if (length(df_stundas) != ti_skaits) {
+      stundas_table <- df %>%
+        mutate(Stunda = hour(Datums_laiks)) %$%
+        table(Stunda)
+      st_proc <- stundas_table / nrow(df) * 100
+      df_stundas <- as.numeric(names(stundas_table[!st_proc < 1])) # Noņem visas stundas, kuru skaits < 1%
+    }
+    
+    datetime_seq <- seq.POSIXt(from = term_sakums, to = term_beigas, by = "hour")
+    datetime_seq <- datetime_seq[hour(datetime_seq) %in% df_stundas]
+    datetime_df <- data.frame(Datums_laiks = datetime_seq, Stacija = meta_stac, stringsAsFactors = F)
+    
+    staclist[[i]] <- left_join(datetime_df, df)
+  }
+  datalist_termini[[j]] <- bind_rows(staclist)
+}
+
+termini_data <- bind_rows(datalist_termini)
+
+# Nogriež datus termiņū sākuma un beigu punktos
+datalist_termini_2 <- list()
+for (i in 1:nrow(Urpar_starts)) {
+  # i <- 1
+  Stac <- Urpar_starts[i, "Stacija", drop = T]
+  Datums_start <- Urpar_starts[i, "Datums_laiks", drop = T]
+  Datums_end <- filter(Hpar_starts, Stacija == Stac) %>% pull(Datums_laiks)
+  
+  if (length(Datums_end) == 0) {
+    df <- termini_data %>%
+      filter(Stacija == Stac)
+  } else {
+    df <- termini_data %>%
+      filter(Stacija == Stac) %>%
+      filter(Datums_laiks < Datums_end)
+  }
+  
+  if (length(Datums_start) == 0) {
+    datalist_termini_2[[i]] <- df
+  } else {
+    datalist_termini_2[[i]] <- df %>%
+      filter(Datums_laiks >= Datums_start)
+  }
+}
+
+termini_data_clean <- datalist_termini_2 %>% bind_rows()
+
+
+# Pievieno HTDRY datus un unregular datus -----------------------------------
 
 
 
 
+  
+  
+# Calculate daily data
 
 
 
 
-
-# Pievieno instrūkstošās dienas
-datumi <- seq.Date(min(data_ur$Datums), max(data_ur$Datums), by = "day")
-datumi <- data.frame(Datums = datumi)
-
-data_ur <- data_ur %>%
-  spread(Stacija, Merijums) %>%
-  left_join(datumi, .) %>%
-  gather(Stacija, Merijums, -Parametrs, -Datums)
-
-# Apstrādā regular datus
-data_r <- data_r %>%
-  tidy_hourly()
-
-r_params <- unique(data_r$Parametrs)
-data_r_ls <- map(r_params, ~ filter(data_r, Parametrs == .x))
-
-names(data_r_ls) <- r_params
