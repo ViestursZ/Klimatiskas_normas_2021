@@ -3,7 +3,7 @@
 library(tidyverse)
 library(lubridate)
 library(magrittr)
-
+library(data.table)
 
 # Functions ---------------------------------------------------------------
 
@@ -117,7 +117,6 @@ Ur_starts <- function(data) {
 # Fun call
 Urpar_starts <- Ur_starts(temp_data)
 
-
 # Extract relevant metadata terms and relevant term data
 metalist_termini <- list()
 
@@ -222,14 +221,91 @@ termini_data_clean <- datalist_termini_2 %>% bind_rows()
 
 
 # Pievieno HTDRY datus un unregular datus -----------------------------------
+# Remove 10 minute parameters
+
+extract_hourly <- function(df) {
+  df %>% filter(str_detect(Parametrs, "^H"))
+}
+
+# Fun call
+hourly_data <- temp_data$r %>%
+  extract_hourly()
+
+hourly_data <- hourly_data %>%
+  spread(Stacija, Merijums)
+
+hrange <- range(hourly_data$Datums_laiks)
+dateseq <- seq.POSIXt(hrange[1], hrange[2], by = "hour")
+dateseq_df <- data.frame(Datums_laiks = dateseq)
+
+hourly_full <- left_join(dateseq_df, hourly_data)  
+hourly_full <- hourly_full %>%
+  gather(Stacija, Merijums, -Datums_laiks, -Parametrs)
+
+# Cut stations by HPRAB start
+hourly_list <- list()
+for (i in 1:nrow(Hpar_starts)) {
+  # i <- 1
+  Stac <- Hpar_starts[i, "Stacija", drop = T]
+  Datums_start <- Hpar_starts[i, "Datums_laiks", drop = T]
+  hourly_list[[i]] <- hourly_full %>%
+    filter(Stacija == Stac) %>%
+    filter(Datums_laiks >= Datums_start)
+}
+
+hourly_full_clean <- hourly_list %>%
+  bind_rows()
+
+# Nogriež unregular data --------------------------------------------------
+unregular_data <- temp_data$ur
+
+unregular_list <- list()
+for (i in 1:nrow(Urpar_starts)) {
+  Stac <- Urpar_starts[i, "Stacija", drop = T]
+  Datums_end <- Urpar_starts[i, "Datums_laiks", drop = T]
+  unregular_list[[i]] <- unregular_data %>%
+    filter(Stacija == Stac) %>%
+    filter(Datums < Datums_end)
+}
+
+unregular_data_clean <- bind_rows(unregular_list)
+
+unregular_data_clean <- unregular_data_clean %>%
+  mutate(Datums_laiks = as_datetime(Datums),
+         Datums_laiks = `hour<-`(Datums_laiks, 12)) %>%
+  dplyr::select(-Datums)
 
 
+# Apvieno visas datu kopas vienā ------------------------------------------
+
+termini_data_clean
+hourly_full_clean
+unregular_data_clean
 
 
-  
-  
-# Calculate daily data
+# Apvieno datu kopas ar visiem pareizajiem NA
+full_data_clean <- bind_rows(termini_data_clean, hourly_full_clean, unregular_data_clean) %>%
+  arrange(Stacija, Datums_laiks)
 
+# Pārbauda pēdējo daļu datos
+dupli_idx <- duplicated(full_data_clean[, 1:2])
+full_data_clean <- full_data_clean[!dupli_idx, ]
+# Export data -------------------------------------------------------------
 
+temp_data_clean <- full_data_clean
+temp_data_clean %>%
+  write_excel_csv("Dati/Temp_dati_clean.csv")
 
+# Plots -------------------------------------------------------------------
+
+library(plotly)
+
+Ainazi_plot <- temp_data_clean %>%
+  filter(Stacija == "RIAI99PA") %>%
+  ggplot(data = .) +
+  geom_point(aes(Datums_laiks, Merijums), size = 0.5)
+
+Ainazi_html <- ggplotly(Ainazi_plot)
+
+htmlwidgets::saveWidget(Ainazi_html, "Ainazi_test.html")
 
