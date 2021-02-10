@@ -132,14 +132,17 @@ extract_correct_terms <- function(data, meta_terms) {
       datetime_seq <- datetime_seq[hour(datetime_seq) %in% df_stundas]
       datetime_df <- data.frame(Datums_laiks = datetime_seq, Stacija = meta_stac, stringsAsFactors = F)
       
-      staclist[[i]] <- left_join(datetime_df, df)
+      staclist[[i]] <- full_join(datetime_df, df) %>%
+        mutate(Data_stundas = list(df_stundas)) %>% # Debugging - kuras ir noteiktās stundas no datiem
+        mutate(t_interval = ti, # Debugging - kāds ir TI no metadatiem?
+               ti_skaits = ti_skaits) # Debugging - kāds ir TI skaits dienā?
     }
     datalist_termini[[j]] <- bind_rows(staclist)
   }
   return(datalist_termini)
 }
 
-# Exttract start date for Hourly parameters
+# Extract start date for Hourly parameters
 H_starts <- function(data) {
   # extract the start date for hourly parameters. Uses extract_start_date function
   data$r %>%
@@ -272,22 +275,23 @@ metadata <- read_rds("Dati/station_metadata.rds")
 unreg_pars <- c("TDRY", "ATMX", "ATMN", "PRAB")
 
 # Atsevišķi katram parametram
-temp_data <- select(temp_data, 1:37)
-nokr_data <- select(nokr_data, 1:37)
+# temp_data <- select(temp_data, 1:37)
+# nokr_data <- select(nokr_data, 1:37)
 
-temp_data <- temp_data %>%
-  tidy_datasets(funreg = "AVG")
+# Clean the data
+# temp_data <- temp_data %>%
+#   precleaning(unreg_pars = unreg_pars)
+nokr_data <- nokr_data %>%
+  precleaning(unreg_pars = unreg_pars)
+
+# temp_data <- temp_data %>%
+#   tidy_datasets(funreg = "AVG")
 nokr_data <- nokr_data %>%
   tidy_datasets(funreg = "SUM")
 
-# Clean the data
-temp_data <- temp_data %>%
-  precleaning(unreg_pars = unreg_pars)
-nokr_data <- nokr_data %>%
-  precleaning(unreg_pars = unreg_pars)
 
 # Extract vajadzīgās stacijas
-temp_stacijas <- extract_stations(temp_data)
+# temp_stacijas <- extract_stations(temp_data)
 nokr_stacijas <- extract_stations(nokr_data)
 
 # Metadata cleaning -------------------------------------------------------
@@ -300,30 +304,32 @@ metadata <- metadata %>%
          END_DATE = force_tz(END_DATE, "UTC"))
 
 # Atfiltrē relevant metadatus
-temp_meta <- metadata %>% filter_meta(temp_stacijas, c("TDRY", "HTDRY", "MTDRY"))
-nokr_meta <- metadata %>% filter_meta(nokr_stacijas, c("PRAB", "HPRAB", "MPRAB"))# Extract start date H parametram
+# temp_meta <- metadata %>% filter_meta(temp_stacijas, c("TDRY", "HTDRY", "MTDRY"))
+nokr_meta <- metadata %>% filter_meta(nokr_stacijas, c("PRAB", "HPRAB", "MPRAB")) # Extract start date H parametram
 
 
 # Parametru sākumi --------------------------------------------------------
 # Extract hourly parameter start
-Hpar_starts <- H_starts(temp_data)
+# Hpar_starts <- H_starts(temp_data)
 Hpar_starts_nokr <- H_starts(nokr_data)
 
 # Extract start date for undergular parameter
-Urpar_starts <- Ur_starts(temp_data)
+# Urpar_starts <- Ur_starts(temp_data)
 Urpar_starts_nokrisni <- Ur_starts(nokr_data)
 
 # Extract relevant metadata terms and relevant term data
 metalist_termini_nokr <- extract_meta_termini(meta_dati = nokr_meta, param_starts = Hpar_starts_nokr)
-metalist_termini_temp <- extract_meta_termini(meta_dati = temp_meta, param_starts = Hpar_starts)
+# metalist_termini_temp <- extract_meta_termini(meta_dati = temp_meta, param_starts = Hpar_starts)
 
 
 # Filters out only term data
 nokr_termini_data <- extract_term(nokr_data$r)
-termini_data <- extract_term(temp_data$r)
+# termini_data <- extract_term(temp_data$r)
 
-nokr_termini_data <- extract_correct_terms(nokr_termini_data, metalist_termini_nokr)
-nokr_termini_data <- bind_rows(nokr_termini_data)
+
+##### TEST #####
+nokr_termini_data_ex <- extract_correct_terms(nokr_termini_data, metalist_termini_nokr)
+nokr_termini_data_ex <- bind_rows(nokr_termini_data_ex)
 
 # termini_data <- bind_rows(datalist_termini)
 nokr_termini_data_clean <- cut_term_start(nokr_termini_data, Urpar_starts_nokrisni, Hpar_starts_nokr)
@@ -345,7 +351,6 @@ unregular_nokr_data <- nokr_data$ur
 
 # Cuts end of unregular data
 unregular_nokr_data_clean <- cut_unregular_data(unregular_nokr_data, Urpar_starts_nokrisni)
-
 
 
 # Apvieno visas datu kopas vienā ------------------------------------------
@@ -378,15 +383,15 @@ full_nokr_clean2 %>%
   write_excel_csv("Dati/nokr_dati_clean.csv")
 
 # Plots -------------------------------------------------------------------
-
-library(plotly)
-
-Ainazi_plot <- temp_data_clean %>%
-  filter(Stacija == "RIAI99PA") %>%
-  ggplot(data = .) +
-  geom_point(aes(Datums_laiks, Merijums), size = 0.5)
-
-Ainazi_html <- ggplotly(Ainazi_plot)
-
-htmlwidgets::saveWidget(Ainazi_html, "Ainazi_test.html")
+#
+# library(plotly)
+# 
+# Ainazi_plot <- temp_data_clean %>%
+#   filter(Stacija == "RIAI99PA") %>%
+#   ggplot(data = .) +
+#   geom_point(aes(Datums_laiks, Merijums), size = 0.5)
+# 
+# Ainazi_html <- ggplotly(Ainazi_plot)
+# 
+# htmlwidgets::saveWidget(Ainazi_html, "Ainazi_test.html")
 
