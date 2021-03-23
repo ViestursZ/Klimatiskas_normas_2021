@@ -17,10 +17,6 @@ and YEAR > 1989
 data <- sqlQuery(con[[1]], query,
                  stringsAsFactors = F, dec = ",")[,c(1:37)]
 
-#Te ir random rindiņas, bet tas vienkārši ar domu, ka jāatcerās, ja vajag definēt, kad mainās parametrs...
-data <- data[!((data$EG_EL_ABBREVIATION == "HTDRY" & data$YEAR < 2006) |
-         (data$EG_EL_ABBREVIATION == "TDRY" & data$YEAR > 2005)), ]
-
 data_sakums <- data_prep(data) # Sagatavo datus
 
 # turpmākajām f-jām nepieciešams, lai dati satur kolonnas - EG_GH_ID, Value un DATE 
