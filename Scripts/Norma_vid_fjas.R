@@ -1,5 +1,3 @@
-setwd("D:/Dace Gaile/Normu_aprekins")
-
 library('dplyr')
 library('tidyverse')
 library('ggplot2')
