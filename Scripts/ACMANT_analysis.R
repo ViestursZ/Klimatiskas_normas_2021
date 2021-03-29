@@ -30,3 +30,7 @@ ACMANT_data_t <- ACMANT_data %>%
   filter(!is.na(Datums)) %>%
   select(-Gads, -Menesis, -Diena)
 
+
+# Aprekina ACMANT normas --------------------------------------------------
+
+
