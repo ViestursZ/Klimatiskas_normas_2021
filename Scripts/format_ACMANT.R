@@ -20,6 +20,8 @@ temp_dati <- temp_dati %>%
 
 # Aprēķina dienu vērtības -------------------------------------------------
 
+## NEPIESKAITĪJU ZIEMAS LAIKU
+
 temp_d <- temp_dati %>%
   mutate(Datums = date(Datums_laiks)) %>%
   group_by(Stacija, Datums) %>%
@@ -48,6 +50,9 @@ temp_d <- temp_d %>% left_join(iztr_df, .,) %>%
   mutate(Merijums = replace_na(Merijums, -999.9)) # ACMANT NA
 
 data_stacs <- data_stacs[data_stacs != "RIAS99PA"]
+
+temp_d %>%
+  write_csv("Dati/MeanT_daily.csv")
 
 # Format in ACMANT format -------------------------------------------------
 temp_d_spread <- temp_d %>%
