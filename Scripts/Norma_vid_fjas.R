@@ -122,8 +122,9 @@ day_norma <- function(x, rnd = 1) {
   
   x <- rbind((x %>% group_by(EG_GH_ID) %>% slice(c(n()-2), n()-1, n())), x, # Sākumā pievieno pēdējās 3 vērtības
              (x %>% group_by(EG_GH_ID) %>% slice(1,2,3))) %>% as.data.frame()      # Beigās pievieno pirmās 3 vērtības
-  x <- x %>% arrange(EG_GH_ID) %>% group_by(EG_GH_ID) %>% 
-    mutate(ilggad_val2 = round(zoo::rollmean(ilggad_val,k = 7, fill = NA), rnd))     # Aprēķina slīdošo vidējo
+  x <- x %>% arrange(EG_GH_ID) %>% 
+    group_by(EG_GH_ID) %>% 
+    mutate(ilggad_val2 = round(zoo::rollmean(ilggad_val, k = 7, fill = NA), rnd))     # Aprēķina slīdošo vidējo
   
   x <- x[complete.cases(x), ] # Izdzēš iepriekš pievienotās pirmās un pēd. rindas
   x <- x[,-3] # Izdzēš ne-smooth kolonnu
@@ -170,7 +171,8 @@ ilggad_value <- function(x, kopa_vert30 = 24, time, type, rnd = 1) { #time jāli
   
   x <- x %>% group_by(EG_GH_ID,DATE) %>%  # Aprēķina dienas/dekādes/menesa/gada ilggadīgo vidējo. 
     dplyr::summarise(ilggad_val = ifelse((n() >= kopa_vert30), 
-                                         round(mean(Value, na.rm=T), NA), rnd))
+                                         round(mean(Value, na.rm=T), rnd), 
+                                         NA))
 }
 
 
