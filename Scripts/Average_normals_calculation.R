@@ -53,6 +53,14 @@ uh_month_normal <- vid_normas_apr(temp_daily, time = 3)
 uh_year_normal <- vid_normas_apr(temp_daily, time = 4)
 
 
+# ACMANT normas
+ACMANT_data_trn <- ACMANT_data_t %>% # No format_ACMANT.R skripta
+  set_colnames(c("EG_GH_ID", "Value", "DATE"))
+
+ac_day_normal <- vid_normas_apr(ACMANT_data_trn, time = 1)
+ac_dec_normal <- vid_normas_apr(ACMANT_data_trn, time = 2)
+ac_month_normal <- vid_normas_apr(ACMANT_data_trn, time = 3)
+ac_year_normal <- vid_normas_apr(ACMANT_data_trn, time = 4)
 
 # write.csv(day_normal, "NORMA_DAY_TDRY.csv")
 # write.csv(dec_normal, "NORMA_DEC_TDRY.csv")
