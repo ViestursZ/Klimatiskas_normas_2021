@@ -287,33 +287,33 @@ metadata <- read_rds("Dati/station_metadata.rds")
 # (vairāk par 1 mērījumu dienā), un kad tie nav regular (1 mērījums dienā).
 # To nepieciešams labot pašos datos.
 
-tdata <- nokr_data %>%
-  select(1:37) %>%
-  filter(!str_detect(EG_GH_ID, "X")) %>%
-  filter(REGULAR == "Y") %>%
-  filter(TIME != "SUM") %>%
-  tidy_hourly()
-
-reg_mer_sk <- tdata %>%
-  # arrange(Stacija, Datums_laiks) %>%
-  mutate(Datums = date(Datums_laiks)) %>%
-  group_by(Stacija, Datums) %>%
-  summarise(Mer_skaits = n())
-
-reg_mer_sk <- reg_mer_sk %>%
-  arrange(Stacija, Datums) %>%
-  mutate(Roll_skaits = roll_meanl(Mer_skaits, 30))
-
-nevajag_rstacijas <- reg_mer_sk %>%
-  filter(Datums == min(Datums)) %>%
-  filter(Roll_skaits > 1) %>%
-  pull(Stacija)
-
-f_stacijas <- reg_mer_sk %>%
-  filter(!Stacija %in% nevajag_rstacijas) %>%
-  mutate(Roll_skaits = roll_meanr(Mer_skaits, 30)) %>%
-  filter(Roll_skaits > 1) %>%
-  filter(Datums == min(Datums))
+# tdata <- nokr_data %>%
+#   select(1:37) %>%
+#   filter(!str_detect(EG_GH_ID, "X")) %>%
+#   filter(REGULAR == "Y") %>%
+#   filter(TIME != "SUM") %>%
+#   tidy_hourly()
+# 
+# reg_mer_sk <- tdata %>%
+#   # arrange(Stacija, Datums_laiks) %>%
+#   mutate(Datums = date(Datums_laiks)) %>%
+#   group_by(Stacija, Datums) %>%
+#   summarise(Mer_skaits = n())
+# 
+# reg_mer_sk <- reg_mer_sk %>%
+#   arrange(Stacija, Datums) %>%
+#   mutate(Roll_skaits = roll_meanl(Mer_skaits, 30))
+# 
+# nevajag_rstacijas <- reg_mer_sk %>%
+#   filter(Datums == min(Datums)) %>%
+#   filter(Roll_skaits > 1) %>%
+#   pull(Stacija)
+# 
+# f_stacijas <- reg_mer_sk %>%
+#   filter(!Stacija %in% nevajag_rstacijas) %>%
+#   mutate(Roll_skaits = roll_meanr(Mer_skaits, 30)) %>%
+#   filter(Roll_skaits > 1) %>%
+#   filter(Datums == min(Datums))
 
 
 # Datu kārtošana ----------------------------------------------------------
@@ -321,39 +321,39 @@ f_stacijas <- reg_mer_sk %>%
 unreg_pars <- c("TDRY", "ATMX", "ATMN", "PRAB")
 
 # Atsevišķi katram parametram
-# temp_data <- select(temp_data, 1:37)
+temp_data <- select(temp_data, 1:37)
 # nokr_data <- select(nokr_data, 1:37)
 
 # Clean the data
-# temp_data <- temp_data %>%
-#   precleaning(unreg_pars = unreg_pars)
-nokr_data <- nokr_data %>%
+temp_data <- temp_data %>%
   precleaning(unreg_pars = unreg_pars)
+# nokr_data <- nokr_data %>%
+#   precleaning(unreg_pars = unreg_pars)
 
-# temp_data <- temp_data %>%
-#   tidy_datasets(funreg = "AVG")
-nokr_data <- nokr_data %>%
-  tidy_datasets(funreg = "SUM")
+temp_data <- temp_data %>%
+  tidy_datasets(funreg = "AVG")
+# nokr_data <- nokr_data %>%
+#   tidy_datasets(funreg = "SUM")
 
-# Attīra no neīstajiem regular datiem (skat augstāk)
-for (i in 1:nrow(f_stacijas)) {
-  Stacija <- f_stacijas[i, "Stacija", drop = T]
-  fDatums <- f_stacijas[i, "Datums", drop = T]
-  data <- nokr_data$r %>%
-    filter(Stacija == Stacija & Datums_laiks < fDatums) %>%
-    mutate(Datums = date(Datums_laiks)) %>%
-    select(-Datums_laiks)
-  
-  nokr_data$r <- filter(nokr_data$r, !(Stacija == Stacija & Datums_laiks < fDatums))
-  nokr_data$ur <- bind_rows(nokr_data$ur, data)
-}
-
-nokr_data$r %<>% arrange(Stacija, Datums_laiks)
-nokr_data$ur %<>% arrange(Stacija, Datums)
+# # Attīra no neīstajiem regular datiem (skat augstāk)
+# for (i in 1:nrow(f_stacijas)) {
+#   Stacija <- f_stacijas[i, "Stacija", drop = T]
+#   fDatums <- f_stacijas[i, "Datums", drop = T]
+#   data <- nokr_data$r %>%
+#     filter(Stacija == Stacija & Datums_laiks < fDatums) %>%
+#     mutate(Datums = date(Datums_laiks)) %>%
+#     select(-Datums_laiks)
+#   
+#   nokr_data$r <- filter(nokr_data$r, !(Stacija == Stacija & Datums_laiks < fDatums))
+#   nokr_data$ur <- bind_rows(nokr_data$ur, data)
+# }
+# 
+# nokr_data$r %<>% arrange(Stacija, Datums_laiks)
+# nokr_data$ur %<>% arrange(Stacija, Datums)
 
 # Extract vajadzīgās stacijas
-# temp_stacijas <- extract_stations(temp_data)
-nokr_stacijas <- extract_stations(nokr_data)
+temp_stacijas <- extract_stations(temp_data)
+# nokr_stacijas <- extract_stations(nokr_data)
 
 # Metadata cleaning -------------------------------------------------------
 # Remove REGULAR = N, bet stundu dati
@@ -365,81 +365,92 @@ metadata <- metadata %>%
          END_DATE = force_tz(END_DATE, "UTC"))
 
 # Atfiltrē relevant metadatus
-# temp_meta <- metadata %>% filter_meta(temp_stacijas, c("TDRY", "HTDRY", "MTDRY"))
-nokr_meta <- metadata %>% filter_meta(nokr_stacijas, c("PRAB", "HPRAB", "MPRAB")) # Extract start date H parametram
+temp_meta <- metadata %>% filter_meta(temp_stacijas, c("TDRY", "HTDRY", "MTDRY"))
+# nokr_meta <- metadata %>% filter_meta(nokr_stacijas, c("PRAB", "HPRAB", "MPRAB")) # Extract start date H parametram
 
 
 # Parametru sākumi --------------------------------------------------------
 # Extract hourly parameter start
-# Hpar_starts <- H_starts(temp_data)
-Hpar_starts_nokr <- H_starts(nokr_data)
+Hpar_starts <- H_starts(temp_data)
+# Hpar_starts_nokr <- H_starts(nokr_data)
 
 # Extract start date for undergular parameter
-# Urpar_starts <- Ur_starts(temp_data)
-Urpar_starts_nokrisni <- Ur_starts(nokr_data)
+Urpar_starts <- Ur_starts(temp_data)
+# Urpar_starts_nokrisni <- Ur_starts(nokr_data)
 
 # Extract relevant metadata terms and relevant term data
-metalist_termini_nokr <- extract_meta_termini(meta_dati = nokr_meta, nokr_stacijas, Hpar_starts_nokr)
-# metalist_termini_temp <- extract_meta_termini(meta_dati = temp_meta, param_starts = Hpar_starts)
+# metalist_termini_nokr <- extract_meta_termini(meta_dati = nokr_meta, nokr_stacijas, Hpar_starts_nokr)
+metalist_termini_temp <- extract_meta_termini(meta_dati = temp_meta, temp_stacijas, param_starts = Hpar_starts)
 
 # Filters out only term data
-nokr_termini_data <- extract_term(nokr_data$r)
-# termini_data <- extract_term(temp_data$r)
+# nokr_termini_data <- extract_term(nokr_data$r)
+termini_data <- extract_term(temp_data$r)
 
-# Aizvieto datus ar 0, jo PRAB novērojumos nav iztrūkumu
-nokr_termini_data <- nokr_termini_data %>%
-  mutate(Merijums = replace_na(Merijums, 0))
+# # Aizvieto datus ar 0, jo PRAB novērojumos nav iztrūkumu
+# nokr_termini_data <- nokr_termini_data %>%
+#   mutate(Merijums = replace_na(Merijums, 0))
 
 ##### TERMIŅU LAIKU PIEVIENOŠANA #####
-nokr_termini_data_ex <- extract_correct_terms(nokr_termini_data, metalist_termini_nokr)
-nokr_termini_data_ex <- bind_rows(nokr_termini_data_ex)
+termini_data_ex <- extract_correct_terms(termini_data, metalist_termini_temp)
+termini_data_ex <- bind_rows(termini_data_ex)
+
+# nokr_termini_data_ex <- extract_correct_terms(nokr_termini_data, metalist_termini_nokr)
+# nokr_termini_data_ex <- bind_rows(nokr_termini_data_ex)
 
 # Noņem liekās kolonnas
-nokr_termini_data_ex <- nokr_termini_data_ex %>% 
-  select(-Data_stundas, -t_interval, -ti_skaits)
+termini_data_ex <- termini_data_ex %>%
+  select(-Data_stundas, -Data_stundas, -t_interval, -ti_skaits)
+# nokr_termini_data_ex <- nokr_termini_data_ex %>%
+#   select(-Data_stundas, -t_interval, -ti_skaits)
 
 # termini_data <- bind_rows(datalist_termini)
-nokr_termini_data_clean <- cut_term_start(nokr_termini_data_ex, Urpar_starts_nokrisni, Hpar_starts_nokr)
-
+# nokr_termini_data_clean <- cut_term_start(nokr_termini_data_ex, Urpar_starts_nokrisni, Hpar_starts_nokr)
+termini_data_clean <- cut_term_start(termini_data_ex, Urpar_starts, Hpar_starts)
 
 # Pievieno HTDRY datus un unregular datus -----------------------------------
 # Remove 10 minute parameters
-# hourly_data <- temp_data$r %>%
-#   extract_hourly()
-hourly_nokrisni <- nokr_data$r %>%
+hourly_data <- temp_data$r %>%
   extract_hourly()
+# hourly_nokrisni <- nokr_data$r %>%
+#   extract_hourly()
 
 # Add missing hours
-nokr_hourly_full_clean <- add_missing_hours(hourly_nokrisni, Hpar_starts_nokr)
+# nokr_hourly_full_clean <- add_missing_hours(hourly_nokrisni, Hpar_starts_nokr)
+hourly_data_clean <- add_missing_hours(hourly_data, Hpar_starts)
 
 # Nogriež unregular data --------------------------------------------------
-# unregular_data <- temp_data$ur
-unregular_nokr_data <- nokr_data$ur
+unregular_data <- temp_data$ur
+# unregular_nokr_data <- nokr_data$ur
 
 # Cuts end of unregular data
-unregular_nokr_data_clean <- cut_unregular_data(unregular_nokr_data, Urpar_starts_nokrisni)
-
+unregular_data_clean <- cut_unregular_data(unregular_data, Urpar_starts)
+# unregular_nokr_data_clean <- cut_unregular_data(unregular_nokr_data, Urpar_starts_nokrisni)
 
 # Apvieno visas datu kopas vienā ------------------------------------------
 
-nokr_termini_data_clean
-nokr_hourly_full_clean
-unregular_nokr_data_clean
+termini_data_clean
+hourly_data
+unregular_data
+
+# nokr_termini_data_clean
+# nokr_hourly_full_clean
+# unregular_nokr_data_clean
 
 # Apvieno datu kopas ar visiem pareizajiem NA
-# full_data_clean <- bind_rows(termini_data_clean, hourly_full_clean, unregular_data_clean) %>%
-# arrange(Stacija, Datums_laiks)
-
-full_nokr_clean <- bind_rows(nokr_hourly_full_clean, nokr_termini_data_clean,
-                             unregular_nokr_data_clean) %>% 
+full_data_clean <- bind_rows(termini_data_clean, hourly_data_clean, 
+                             unregular_data_clean) %>%
   arrange(Stacija, Datums_laiks)
+
+# full_nokr_clean <- bind_rows(nokr_hourly_full_clean, nokr_termini_data_clean,
+#                              unregular_nokr_data_clean) %>% 
+#   arrange(Stacija, Datums_laiks)
 
 # Pārbauda pēdējo daļu datos
 dupli_idx <- duplicated(full_data_clean[, 1:2])
 full_data_clean <- full_data_clean[!dupli_idx, ]
 
-dupli_nokr_idx <- duplicated(full_nokr_clean[, c(1, 3)])
-full_nokr_clean2 <- full_nokr_clean[dupli_nokr_idx, ]
+# dupli_nokr_idx <- duplicated(full_nokr_clean[, c(1, 3)])
+# full_nokr_clean2 <- full_nokr_clean[dupli_nokr_idx, ]
 
 # Export data -------------------------------------------------------------
 
