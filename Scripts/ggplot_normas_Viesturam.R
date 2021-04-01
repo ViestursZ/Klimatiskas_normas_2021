@@ -31,8 +31,8 @@ for(i in c(1:length(stacijas))){
   
   ggday %>% ggplot(aes(x = DATE2)) +
     geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size=0.5) +
-    geom_line(aes(DATE2, y = norma1, group = 1, color = "Norma 1"), size = 1) +
-    geom_line(aes(DATE2, y = norma2, group = 1, color = "Norma 2"), size = 1) + 
+    geom_line(aes(DATE2, y = norma1, group = 1, color = "UH norma"), size = 1) +
+    geom_line(aes(DATE2, y = norma2, group = 1, color = "AC norma"), size = 1) + 
     theme_classic() +
     scale_x_datetime(breaks = date_breaks(width = "1 month"), 
                      labels = date_format("%1.%m.")) +
@@ -81,8 +81,8 @@ for(i in c(1:length(stacijas))){
   
  ggdec %>% ggplot(aes(x = DATE2)) +
     geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size=0.5) +
-    geom_line(aes(DATE2, y = norm_dec1, group = 1, color = "Norma 1"), size = 1) +
-    geom_line(aes(DATE2, y = norm_dec2, group = 1, col = "Norma 2"), size = 1) + 
+    geom_line(aes(DATE2, y = norm_dec1, group = 1, color = "UH norma"), size = 1) +
+    geom_line(aes(DATE2, y = norm_dec2, group = 1, col = "AC norma"), size = 1) + 
     theme_classic() +
     scale_x_datetime(breaks = date_breaks(width = "1 month"), 
                      labels = date_format("%1.%m.")) +
@@ -124,9 +124,9 @@ for(i in c(1:length(stacijas))){
   ggmon <- cbind(DATE2 = normas_merge$DATE2, ggmon) # Datumi te ir ņemti no dienu zīmēšanas.
   
   ggmon %>% ggplot(aes(x = DATE2)) +
-    geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size=0.5) +
-    geom_line(aes(DATE2,y = norm_mon1, group = 1, color = "Norma 1"), size = 1) +
-    geom_line(aes(DATE2,y = norm_mon2, group = 1, col = "Norma 2"), size = 1) + 
+    geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size = 0.5) +
+    geom_line(aes(DATE2,y = norm_mon1, group = 1, color = "UH norma"), size = 1) +
+    geom_line(aes(DATE2,y = norm_mon2, group = 1, col = "AC norma"), size = 1) + 
     theme_classic() +
     scale_x_datetime(breaks = date_breaks(width = "1 month"), 
                      labels = date_format("%1.%m.")) +
@@ -138,8 +138,5 @@ for(i in c(1:length(stacijas))){
     scale_color_manual(values = c("brown3", "blue3")) +
     ggsave(paste("Grafiki/Homog_normu_salidzinajums/Menesi/", stac,"_mon_normas.png"))
 }
-
-
-
 
 
