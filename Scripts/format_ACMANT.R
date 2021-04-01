@@ -10,14 +10,6 @@ library(magrittr)
 source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/aggregation_funcs.r")
 source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/Recode_stations.R", encoding = "UTF-8")
 
-# Ielādē sakārtotos temperatūras datus ------------------------------------
-
-temp_dati <- read_csv("Dati/Temp_dati_clean.csv")
-
-temp_dati <- temp_dati %>%
-  mutate(Datums_laiks = ymd_hms(Datums_laiks))
-
-
 # Format in ACMANT format -------------------------------------------------
 temp_d_spread <- temp_d %>% # Dati no temperaturas_homogenizacija.R
   mutate(Gads = year(Datums),
