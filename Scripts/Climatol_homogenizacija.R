@@ -103,11 +103,17 @@ setwd("./Dati/Climatol_data")
 # homogen("LVMeanT", 1947, 2020, expl = T)
 # outrename("LVMeanT", 1947, 2020, "expl_analysis")
 
-homogen("LVMeanT", 1947, 2020)
-outrename("LVMeanT", 1947, 2020, "test")
+# homogen("LVMeanT", 1947, 2020)
+# outrename("LVMeanT", 1947, 2020, "test")
+# setwd("../../")
+
+# Mēnešu sērijas, jo dienu sērijas utterly failoja
+dd2m("LVMeanT", 1947, 2020)
+homogen("LVMeanT-m", 1947, 2020)
+homogen("LVMeanT", 1947, 2020, dz.max = 7, metad = T)
+outrename("LVMeanT", 1947, 2020, "daily_monbrks")
+
 setwd("../../")
-
-
 # Test run over -----------------------------------------------------------
 
 
