@@ -1,4 +1,3 @@
-
 # Funkcijas --------------------------------------------------------------------
 
 # turpmākajām f-jām nepieciešams, lai dati satur kolonnas - EG_GH_ID, Value un DATE 
@@ -46,7 +45,6 @@ temp_daily <- temp_daily %>%
 temp_daily <- temp_daily %>%
   set_colnames(c("DATE", "EG_GH_ID", "Value"))
 
-
 uh_day_normal <- vid_normas_apr(temp_daily, time = 1)
 uh_dec_normal <- vid_normas_apr(temp_daily, time = 2)
 uh_month_normal <- vid_normas_apr(temp_daily, time = 3)
@@ -61,6 +59,18 @@ ac_day_normal <- vid_normas_apr(ACMANT_data_trn, time = 1)
 ac_dec_normal <- vid_normas_apr(ACMANT_data_trn, time = 2)
 ac_month_normal <- vid_normas_apr(ACMANT_data_trn, time = 3)
 ac_year_normal <- vid_normas_apr(ACMANT_data_trn, time = 4)
+
+
+# Climatol normas 
+climatol_homdata_trn <- climatol_homdata %>%  # No Climatol_analysis.R
+  pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
+  set_colnames(c("DATE", "EG_GH_ID", "Value"))
+
+clim_day_normal <- vid_normas_apr(climatol_homdata_trn, time = 1)
+clim_dec_normal <- vid_normas_apr(climatol_homdata_trn, time = 2)
+clim_month_normal <- vid_normas_apr(climatol_homdata_trn, time = 3)
+clim_year_normal <- vid_normas_apr(climatol_homdata_trn, time = 4)
+
 
 # write.csv(day_normal, "NORMA_DAY_TDRY.csv")
 # write.csv(dec_normal, "NORMA_DEC_TDRY.csv")

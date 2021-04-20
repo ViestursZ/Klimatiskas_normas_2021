@@ -101,3 +101,4 @@ homogenizetie_dati <- bind_cols(series) %>%
   mutate(Datums = datumi) %>%
   dplyr::select(Datums, everything())
   
+climatol_homdata <- homogenizetie_dati

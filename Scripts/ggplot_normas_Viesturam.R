@@ -16,8 +16,15 @@ norma2 <- ac_day_normal
 norma2 <- norma2 %>% mutate(DATE=substr(as.POSIXct(norma2$DATE, format='%m-%d'),6,10))
 norma22 <- norma2 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
-normas_merge <- merge(norm11, norma22, by=c("EG_GH_ID","DATE")) %>% arrange(EG_GH_ID, DATE)
-names(normas_merge)[c(3,4)] <- c("norma1", "norma2")
+norma3 <- clim_day_normal
+norma3 <- norma3 %>% mutate(DATE=substr(as.POSIXct(norma3$DATE, format='%m-%d'),6,10))
+norma33 <- norma3 %>% gather(EG_GH_ID, VALUE, -c(DATE))
+
+normas_merge <- merge(norm11, norma22, by = c("EG_GH_ID","DATE")) %>%
+  merge(norma33, by = c("EG_GH_ID","DATE")) %>%
+  arrange(EG_GH_ID, DATE)
+  
+names(normas_merge)[c(3:5)] <- c("norma1", "norma2", "norma3")
 
 normas_merge$DATE <- as.POSIXct(paste0(substr(normas_merge$DATE,4,5),"-",substr(normas_merge$DATE,1,2)), format = "%d-%m")
 normas_merge <- normas_merge %>%  
@@ -33,6 +40,7 @@ for(i in c(1:length(stacijas))){
     geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size=0.5) +
     geom_line(aes(DATE2, y = norma1, group = 1, color = "UH norma"), size = 1) +
     geom_line(aes(DATE2, y = norma2, group = 1, color = "AC norma"), size = 1) + 
+    geom_line(aes(DATE2, y = norma3, group = 1, color = "Cl norma"), size = 1) +
     theme_classic() +
     scale_x_datetime(breaks = date_breaks(width = "1 month"), 
                      labels = date_format("%1.%m.")) +
@@ -41,7 +49,7 @@ for(i in c(1:length(stacijas))){
     labs(colour="") +
     ggtitle(paste0(stac, " diennakts temperatūras normas")) +
     theme(legend.position = "top") +
-    scale_color_manual(values = c("brown3", "blue3")) +
+    scale_color_manual(values = c("UH norma" = "blue3", "AC norma" = "brown3", "Cl norma" = "green3")) +
     ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dienas/", stac,"_dien_normas.png"))
 }
 
@@ -54,8 +62,15 @@ norm_dec2 <- ac_dec_normal
 norm_dec2 <- norm_dec2 %>% mutate(DATE=substr(as.POSIXct(norm_dec2$DATE, format='%m-%d'),6,10))
 norm_dec22 <- norm_dec2 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
-dec_norm <- merge(norm_dec11, norm_dec22, by=c("EG_GH_ID","DATE")) %>% arrange(EG_GH_ID, DATE)
-names(dec_norm)[c(3,4)] <- c("norm_dec1", "norm_dec2")
+norm_dec3 <- clim_dec_normal
+norm_dec3 <- norm_dec3 %>% mutate(DATE=substr(as.POSIXct(norm_dec3$DATE, format='%m-%d'),6,10))
+norm_dec33 <- norm_dec3 %>% gather(EG_GH_ID, VALUE, -c(DATE))
+
+dec_norm <- merge(norm_dec11, norm_dec22, by=c("EG_GH_ID","DATE")) %>% 
+  merge(norm_dec33, by = c("EG_GH_ID","DATE")) %>%
+  arrange(EG_GH_ID, DATE)
+  
+names(dec_norm)[c(3:5)] <- c("norm_dec1", "norm_dec2", "norm_dec3")
 dec_norm$DATE <- as.POSIXct(paste0(substr(dec_norm$DATE,4,5),"-",substr(dec_norm$DATE,1,2)), format = "%d-%m")
 #dec_norm <- dec_norm %>% mutate(DATE2 = DATE + days(31))
 
@@ -83,6 +98,7 @@ for(i in c(1:length(stacijas))){
     geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size=0.5) +
     geom_line(aes(DATE2, y = norm_dec1, group = 1, color = "UH norma"), size = 1) +
     geom_line(aes(DATE2, y = norm_dec2, group = 1, col = "AC norma"), size = 1) + 
+    geom_line(aes(DATE2, y = norm_dec3, group = 1, color = "Cl norma"), size = 1) +
     theme_classic() +
     scale_x_datetime(breaks = date_breaks(width = "1 month"), 
                      labels = date_format("%1.%m.")) +
@@ -91,7 +107,7 @@ for(i in c(1:length(stacijas))){
     labs(colour="")+
     ggtitle(paste0(stac, " dekades temperatūras normas")) +
     theme(legend.position = "top") +
-    scale_color_manual(values = c("brown3", "blue3")) +
+    scale_color_manual(values = c("UH norma" = "blue3", "AC norma" = "brown3", "Cl norma" = "green3"))  +
     ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dekades/", stac,"_dek_normas.png"))
 }
 
@@ -106,8 +122,16 @@ norm_mon2 <- ac_month_normal
 norm_mon2$DATE <- substr(paste0("0",norm_mon2$DATE), nchar(paste0("0",norm_mon2$DATE))-1 , nchar(paste0("0",norm_mon2$DATE)))
 norm_mon22 <- norm_mon2 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
-mon_norm <- merge(norm_mon11, norm_mon22, by=c("EG_GH_ID","DATE")) %>% arrange(EG_GH_ID, DATE)
-names(mon_norm)[c(3,4)] <- c("norm_mon1", "norm_mon2")
+norm_mon3 <- clim_month_normal
+norm_mon3$DATE <- substr(paste0("0",norm_mon3$DATE), nchar(paste0("0",norm_mon3$DATE))-1 , nchar(paste0("0",norm_mon3$DATE)))
+norm_mon33 <- norm_mon3 %>% gather(EG_GH_ID, VALUE, -c(DATE))
+
+
+mon_norm <- merge(norm_mon11, norm_mon22, by=c("EG_GH_ID","DATE")) %>% 
+  merge(norm_mon33, by=c("EG_GH_ID","DATE")) %>%
+  arrange(EG_GH_ID, DATE)
+  
+names(mon_norm)[c(3:5)] <- c("norm_mon1", "norm_mon2", "norm_mon3")
 mon_norm$DATE <- as.POSIXct(paste0("01-",mon_norm$DATE), format = "%d-%m")
 
 for(i in c(1:length(stacijas))){
@@ -127,6 +151,7 @@ for(i in c(1:length(stacijas))){
     geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size = 0.5) +
     geom_line(aes(DATE2,y = norm_mon1, group = 1, color = "UH norma"), size = 1) +
     geom_line(aes(DATE2,y = norm_mon2, group = 1, col = "AC norma"), size = 1) + 
+    geom_line(aes(DATE2, y = norm_mon3, group = 1, color = "Cl norma"), size = 1) +
     theme_classic() +
     scale_x_datetime(breaks = date_breaks(width = "1 month"), 
                      labels = date_format("%1.%m.")) +
@@ -135,7 +160,7 @@ for(i in c(1:length(stacijas))){
     labs(colour="")+
     ggtitle(paste0(stac, " mēneša temperatūras normas")) +
     theme(legend.position = "top") +
-    scale_color_manual(values = c("brown3", "blue3")) +
+    scale_color_manual(values = c("UH norma" = "blue3", "AC norma" = "brown3", "Cl norma" = "green3"))  +
     ggsave(paste("Grafiki/Homog_normu_salidzinajums/Menesi/", stac,"_mon_normas.png"))
 }
 
