@@ -25,10 +25,11 @@ temp_daily <- temp_daily %>%
 # MASH ņem pretī stacijas, kurās ir mazāk kā 30% datu iztrūkums
 nevajag_stacs <- temp_daily %>% 
   group_by(Stacija) %>%
-  summarise(NA_prec = sum(is.na(Merijums) / n()) * 100) %>% 
-  filter(NA_prec >= 30) %>%
+  summarise(NA_prec = sum(is.na(Merijums) / n()) * 100) %>% View()
+  filter(NA_prec >= 19) %>% 
   pull(Stacija)
   
+
 temp_daily <- temp_daily %>%
   filter(!Stacija %in% nevajag_stacs)
 
@@ -98,7 +99,6 @@ mash_coords_print[1,3] <- "       fi(y)"
 # Ieraksta koordinātu tabulu
 write.table(mash_coords_print, file = "Dati/Mash_format/filastat.par", sep = "",
             row.names = F, col.names = F, append = F, quote = F)
-
 
 # Datu noformēšana --------------------------------------------------------
 temp_daily_mash <- temp_daily
