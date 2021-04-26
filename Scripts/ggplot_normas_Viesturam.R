@@ -3,6 +3,7 @@
 library(ggplot2) 
 library(dplyr) 
 library(scales) 
+library(plotly)
 
 Sys.setlocale("LC_ALL", "latvian_Latvia.1257")
 
@@ -36,7 +37,7 @@ for(i in c(1:length(stacijas))){
   stac <- stacijas[i]
   ggday <- normas_merge[normas_merge$EG_GH_ID==stac,]
   
-  ggday %>% ggplot(aes(x = DATE2)) +
+  gplot <- ggday %>% ggplot(aes(x = DATE2)) +
     geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size=0.5) +
     geom_line(aes(DATE2, y = norma1, group = 1, color = "UH norma"), size = 1) +
     geom_line(aes(DATE2, y = norma2, group = 1, color = "AC norma"), size = 1) + 
@@ -49,8 +50,11 @@ for(i in c(1:length(stacijas))){
     labs(colour="") +
     ggtitle(paste0(stac, " diennakts temperatūras normas")) +
     theme(legend.position = "top") +
-    scale_color_manual(values = c("UH norma" = "blue3", "AC norma" = "brown3", "Cl norma" = "green3")) +
-    ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dienas/", stac,"_dien_normas.png"))
+    scale_color_manual(values = c("UH norma" = "blue3", "AC norma" = "brown3", "Cl norma" = "green3"))
+  # ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dienas/", stac,"_dien_normas.png"))
+  
+  gpplot <- ggplotly(gplot)
+  htmlwidgets::saveWidget(gpplot, file = paste0(stac,"_dien_normas.html"), selfcontained = T)
 }
 
 #### Dekāde plot ####
@@ -94,7 +98,7 @@ for(i in c(1:length(stacijas))){
 
   ggdec <- cbind(DATE2 = normas_merge$DATE2, ggdec) # Datumi te ir ņemti no dienu zīmēšanas.
   
- ggdec %>% ggplot(aes(x = DATE2)) +
+ gplot <- ggdec %>% ggplot(aes(x = DATE2)) +
     geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size=0.5) +
     geom_line(aes(DATE2, y = norm_dec1, group = 1, color = "UH norma"), size = 1) +
     geom_line(aes(DATE2, y = norm_dec2, group = 1, col = "AC norma"), size = 1) + 
@@ -107,8 +111,11 @@ for(i in c(1:length(stacijas))){
     labs(colour="")+
     ggtitle(paste0(stac, " dekades temperatūras normas")) +
     theme(legend.position = "top") +
-    scale_color_manual(values = c("UH norma" = "blue3", "AC norma" = "brown3", "Cl norma" = "green3"))  +
-    ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dekades/", stac,"_dek_normas.png"))
+    scale_color_manual(values = c("UH norma" = "blue3", "AC norma" = "brown3", "Cl norma" = "green3"))  
+    # ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dekades/", stac,"_dek_normas.png"))
+ 
+ gpplot <- ggplotly(gplot)
+ htmlwidgets::saveWidget(gpplot, file = paste0(stac,"_dec_normas.html"), selfcontained = T)
 }
 
 
@@ -147,7 +154,7 @@ for(i in c(1:length(stacijas))){
   
   ggmon <- cbind(DATE2 = normas_merge$DATE2, ggmon) # Datumi te ir ņemti no dienu zīmēšanas.
   
-  ggmon %>% ggplot(aes(x = DATE2)) +
+  gplot <- ggmon %>% ggplot(aes(x = DATE2)) +
     geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size = 0.5) +
     geom_line(aes(DATE2,y = norm_mon1, group = 1, color = "UH norma"), size = 1) +
     geom_line(aes(DATE2,y = norm_mon2, group = 1, col = "AC norma"), size = 1) + 
@@ -160,8 +167,11 @@ for(i in c(1:length(stacijas))){
     labs(colour="")+
     ggtitle(paste0(stac, " mēneša temperatūras normas")) +
     theme(legend.position = "top") +
-    scale_color_manual(values = c("UH norma" = "blue3", "AC norma" = "brown3", "Cl norma" = "green3"))  +
-    ggsave(paste("Grafiki/Homog_normu_salidzinajums/Menesi/", stac,"_mon_normas.png"))
+    scale_color_manual(values = c("UH norma" = "blue3", "AC norma" = "brown3", "Cl norma" = "green3"))
+    # ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dekades/", stac,"_dek_normas.png"))
+    
+  gpplot <- ggplotly(gplot)
+  htmlwidgets::saveWidget(gpplot, file = paste0(stac,"_mon_normas.html"), selfcontained = T)
 }
 
 
