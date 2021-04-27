@@ -77,6 +77,3 @@ clim_year_normal <- vid_normas_apr(climatol_homdata_trn, time = 4)
 # write.csv(month_normal, "NORMA_MON_TDRY.csv")
 # write.csv(year_normal, "NORMA_YEAR_TDRY.csv")
 
-
-
-
