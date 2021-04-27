@@ -63,16 +63,15 @@ write_rds(metadata, "Dati/station_metadata.rds")
 odbcClose(con[[1]])
 
 #### Geography data ####
+con <- source("P:/KMN/Kodi/Clidata_connection.r")
+
 query <- paste0(
   "select * from geography
-  where gh_id in (",
-  stac_query,
-  ")
   order by gh_id")
 
-geography_data <- sqlQuery(channel[[1]], query,
+geography_data <- sqlQuery(con[[1]], query,
                            stringsAsFactors = F)
 
-write_rds(geography_data, "Data/geog_data.rds")
-odbcClose(channel[[1]])
+write_rds(geography_data, "Dati/geog_data.rds")
+odbcClose(con[[1]])
 
