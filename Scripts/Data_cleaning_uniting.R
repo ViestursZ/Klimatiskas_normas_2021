@@ -113,8 +113,6 @@ cut_hourly_data <- function(data, h_starts) {
 }
 
 # Ielādē datus ------------------------------------------------------------
-# No skripta Export_from_DB_v_day_all.R
-# Pagaidām tikai gaisa temperatūras dati
 
 # metadati
 metadata <- read_rds("Dati/station_metadata.rds")
