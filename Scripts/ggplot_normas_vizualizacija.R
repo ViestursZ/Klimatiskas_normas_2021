@@ -7,6 +7,16 @@ library(plotly)
 
 Sys.setlocale("LC_ALL", "latvian_Latvia.1257")
 
+# Vecās normas ------------------------------------------------------------
+
+old_dec <- read_csv2("Dati/old_Videja_gaisa_temperatura_dek.csv")
+old_dec <- old_dec %>%
+  mutate(DATE = str_c(str_replace(format(old_dec$MON), " ", "0"),
+                      paste0("0", format(old_dec$DATE)),
+                      sep = "-")) %>%
+  select(-MON)
+  
+
 #### Diennakts plot ####
 norm1 <- uh_day_normal
 norm1 <- norm1 %>% mutate(DATE=substr(as.POSIXct(norm1$DATE, format='%m-%d'),6,10))
@@ -70,11 +80,19 @@ norm_dec3 <- clim_dec_normal
 norm_dec3 <- norm_dec3 %>% mutate(DATE=substr(as.POSIXct(norm_dec3$DATE, format='%m-%d'),6,10))
 norm_dec33 <- norm_dec3 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
+norm_dec4 <- old_dec
+norm_dec4 <- norm_dec4 %>% mutate(DATE=substr(as.POSIXct(norm_dec4$DATE, format='%m-%d'),6,10))
+norm_dec44 <- norm_dec4 %>% gather(EG_GH_ID, VALUE, -c(DATE))
+
+
+
 dec_norm <- merge(norm_dec11, norm_dec22, by=c("EG_GH_ID","DATE")) %>% 
   merge(norm_dec33, by = c("EG_GH_ID","DATE")) %>%
-  arrange(EG_GH_ID, DATE)
+  merge(norm_dec44, by = c("EG_GH_ID","DATE"))
+  # arrange(EG_GH_ID, DATE)
   
-names(dec_norm)[c(3:5)] <- c("norm_dec1", "norm_dec2", "norm_dec3")
+names(dec_norm)[c(3:6)] <- c("norm_dec1", "norm_dec2", "norm_dec3", "norm_dec4")
+dec_norm <- dec_norm %>% arrange(EG_GH_ID, DATE)
 dec_norm$DATE <- as.POSIXct(paste0(substr(dec_norm$DATE,4,5),"-",substr(dec_norm$DATE,1,2)), format = "%d-%m")
 #dec_norm <- dec_norm %>% mutate(DATE2 = DATE + days(31))
 
@@ -103,6 +121,7 @@ for(i in c(1:length(stacijas))){
     geom_line(aes(DATE2, y = norm_dec1, group = 1, color = "UH norma"), size = 1) +
     geom_line(aes(DATE2, y = norm_dec2, group = 1, col = "AC norma"), size = 1) + 
     geom_line(aes(DATE2, y = norm_dec3, group = 1, color = "Cl norma"), size = 1) +
+    geom_line(aes(DATE2, y = norm_dec4, group = 1, color = "Old norma"), size = 1) +
     theme_classic() +
     scale_x_datetime(breaks = date_breaks(width = "1 month"), 
                      labels = date_format("%1.%m.")) +
@@ -111,13 +130,19 @@ for(i in c(1:length(stacijas))){
     labs(colour="")+
     ggtitle(paste0(stac, " dekades temperatūras normas")) +
     theme(legend.position = "top") +
-    scale_color_manual(values = c("UH norma" = "blue3", "AC norma" = "brown3", "Cl norma" = "green3"))  
+    scale_color_manual(values = c("UH norma" = "blue3", "AC norma" = "brown3", "Cl norma" = "green3",
+                                  "Old norma" = "orange3"))  
     # ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dekades/", stac,"_dek_normas.png"))
+ 
+ gplot +
+   ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dekades/", stac,"_dek_normas.png"))
  
  gpplot <- ggplotly(gplot)
  htmlwidgets::saveWidget(gpplot, file = paste0(stac,"_dec_normas.html"), selfcontained = T)
 }
 
+
+# Latvijas mean
 
 #### Mēneša plot ####
 
