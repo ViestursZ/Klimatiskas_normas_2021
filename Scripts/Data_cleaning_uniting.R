@@ -167,4 +167,4 @@ duplidata <- full_data_clean[didx2, ]
 full_data_clean2 <- full_data_clean[!dupli_idx, ]
 
 # Write clean data
-full_data_clean2 %>% write_csv2("Dati/Temp_dati_clean.csv")
+full_data_clean %>% write_csv("Dati/Temp_dati_clean.csv")

@@ -35,11 +35,7 @@ vid_normas_apr <- function(x, time){  # time jāliek diena = 1, dekāde = 2, men
 
 # Ielādē datus -------------------------------------------------------------
 
-temp_daily <- read_csv("Dati/MeanT_daily.csv")
-
-# Parastās normas
-temp_daily <- temp_daily %>%
-  mutate(Merijums = ifelse(Merijums == -999.9, NA, Merijums))
+temp_daily <- read_csv("Dati/MeanT_daily.csv", col_types = c("D?n"))
 
 # Pārsauc kolonnas, lai normāli rēķinātos normas
 temp_daily <- temp_daily %>%

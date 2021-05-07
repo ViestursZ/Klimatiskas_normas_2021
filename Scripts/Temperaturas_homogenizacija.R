@@ -6,7 +6,6 @@ library(tidyverse)
 library(lubridate)
 library(magrittr)
 
-
 # Funkcijas ---------------------------------------------------------------
 
 source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/aggregation_funcs.r")
@@ -16,9 +15,6 @@ source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/Recode_stations.R",
 
 temp_dati <- read_csv("Dati/Temp_dati_clean.csv")
 
-temp_dati <- temp_dati %>%
-  mutate(Datums_laiks = ymd_hms(Datums_laiks))
-
 ## NEPIESKAITĪJU ZIEMAS LAIKU
 temp_d <- temp_dati %>%
   mutate(Datums = date(Datums_laiks)) %>%
@@ -27,7 +23,7 @@ temp_d <- temp_dati %>%
 
 # Atfiltrē liekās stacijas
 temp_d <- temp_d %>%
-  filter(!Stacija %in% c("ADAZI", "SELIEPA", "SEVENTSP", "REZEKNE", "RIGAM165"))
+  filter(!Stacija %in% c("ADAZI", "SELIEPA", "SEVENTSP", "REZEKNE", "RIGAM165", "TEST10M"))
 
 # Kādas ir stacijas
 data_stacs <- temp_d %$% unique(Stacija)
@@ -50,8 +46,8 @@ iztr_dateseq <- seq(min(temp_d$Datums), max(temp_d$Datums),
 iztr_df <- data.frame(Datums = iztr_dateseq)
 
 temp_d <- temp_d %>% left_join(iztr_df, .,) %>%
-  gather(Stacija, Merijums, -Datums) %>%
-  mutate(Merijums = replace_na(Merijums, -999.9)) # ACMANT NA
+  gather(Stacija, Merijums, -Datums) 
+
 
 data_stacs <- data_stacs[!data_stacs %in% c("RIAS99PA", "RIRE99MS", "RIDAGDA")]
 

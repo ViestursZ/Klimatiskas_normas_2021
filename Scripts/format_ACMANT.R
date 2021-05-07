@@ -15,11 +15,25 @@ temp_d_spread <- temp_d %>% # Dati no temperaturas_homogenizacija.R
   mutate(Gads = year(Datums),
          Menesis = month(Datums),
          Diena = day(Datums)) %>%
+  mutate(Merijums = replace_na(Merijums, -999.9)) %>% # ACMANT NA
   filter(Gads >= 1821) %>% # ACMANT ņem tikai 200 gadus
   select(-Datums) %>% 
   ungroup() %>% 
   spread(Diena, Merijums, fill = -999.9)
   
+
+# Otrs variants
+temp_d_spread <- read_csv("Dati/MeanT_daily.csv") %>%
+  mutate(Gads = year(Datums),
+         Menesis = month(Datums),
+         Diena = day(Datums)) %>%
+  filter(Gads >= 1821) %>% # ACMANT ņem tikai 200 gadus
+  select(-Datums)
+
+# Mazliet piekārto datus, apvieno stacijas --------------------------------
+
+
+
 # Spread the data between data frames
 temp_d_spr_st <- map(data_stacs, function(x) {filter(temp_d_spread, Stacija == x)})
 
