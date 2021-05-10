@@ -310,8 +310,7 @@ nevajag_rstacijas <- reg_mer_sk %>%
   filter(Roll_skaits > 1) %>%
   pull(Stacija)
  
-f_stacijas <- 
-  reg_mer_sk %>%
+f_stacijas <- reg_mer_sk %>%
   filter(!Stacija %in% nevajag_rstacijas) %>%
   # filter(Stacija == "RIST99PA") %>% 
   mutate(Roll_skaits = roll_meanr(Mer_skaits, 30)) %>%
@@ -392,6 +391,25 @@ termini_data <- extract_term(apstrad_dati1$r)
 #   mutate(Merijums = replace_na(Merijums, 0))
 
 ##### TERMIŅU LAIKU PIEVIENOŠANA #####
+
+ts <- termini_data %>%
+  filter(Stacija == "RIAL99MS") 
+
+ts_start <- range(ts$Datums_laiks)[1]
+ts_end <- range(ts$Datums_laiks)[2]
+dseq <-seq.POSIXt(ts_start, ts_end, by = "hour")
+
+
+ts %>%
+  mutate(Gads = year(Datums_laiks),
+         Menesis = month(Datums_laiks),
+         Stunda = hour(Datums_laiks))
+
+extract_correct_terms2 <- function(data, stacs) {
+  
+}
+
+
 termini_data_ex <- extract_correct_terms(termini_data, metalist_termini_par)
 termini_data_ex <- bind_rows(termini_data_ex)
 
