@@ -40,8 +40,10 @@ compare_series <- function(real_series, comp_series) {
 # })
 
 
+# Raw temperatūras CLIMATOL homogenizēti dati -----------------------------
+
 # Ielādē climatol datus
-climatol_daily <- load("Dati/Climatol_data/LVMeanT-daily_monbrks_1947-2020.rda")
+climatol_raw_daily <- load("Dati/Climatol_data/LVMeanTraw-daily_monbrks_1947-2020.rda")
 vals <- list("ini" = ini, "nd" = nd, "ndec" = ndec, "ne" = ne, "nei" = nei, 
              "nm" = nm, "std" = std, "x" = x)
 data <- list("dah" = dah, "dat" = dat, "est.c" = est.c)
@@ -49,10 +51,10 @@ homdata <- list("vals" = vals, "data" = data)
 
 
 # Sakārto datu kopas
-climatol_temp_daily_s <- climatol_temp_daily %>%
+climatol_temp_raw_daily_s <- climatol_temp_raw_daily %>% # Dati no Climatol_homogenizacija.R skripta
   spread(Stacija, Merijums)
 
-datnames <- colnames(climatol_temp_daily_s)[colnames(climatol_temp_daily_s) != "Datums"]
+datnames <- colnames(climatol_temp_raw_daily_s)[colnames(climatol_temp_raw_daily_s) != "Datums"]
 
 # Loop ar datu apstrādi
 # Initialize variables
@@ -76,7 +78,7 @@ abs_errors <- vector()
 
 for (i in seq_along(datnames)) {
   series_name <- datnames[i]
-  real_ser <- climatol_temp_daily_s %>%
+  real_ser <- climatol_temp_raw_daily_s %>%
     dplyr::select(matches(series_name)) %>%
     purrr::map(extract_last, 100)
   
@@ -101,4 +103,69 @@ homogenizetie_dati <- bind_cols(series) %>%
   mutate(Datums = datumi) %>%
   dplyr::select(Datums, everything())
   
-climatol_homdata <- homogenizetie_dati
+climatol_raw_homdata <- homogenizetie_dati
+
+# Koriģētās temperatūras CLIMATOL homogenizēti dati --------------------------
+
+# Ielādē climatol datus
+climatol_korig_daily <- load("Dati/Climatol_data/LVMeanTcor-daily_monbrks_1947-2020.rda")
+vals <- list("ini" = ini, "nd" = nd, "ndec" = ndec, "ne" = ne, "nei" = nei, 
+             "nm" = nm, "std" = std, "x" = x)
+data <- list("dah" = dah, "dat" = dat, "est.c" = est.c)
+homdata <- list("vals" = vals, "data" = data)
+
+
+# Sakārto datu kopas
+climatol_temp_cor_daily_s <- climatol_temp_cor_daily %>% # Dati no Climatol_homogenizacija.R skripta
+  spread(Stacija, Merijums)
+
+datnames <- colnames(climatol_temp_cor_daily_s)[colnames(climatol_temp_cor_daily_s) != "Datums"]
+
+# Loop ar datu apstrādi
+# Initialize variables
+datumi <- homdata$vals$x
+dath <- homdata$data$dah
+datuh <- homdata$data$dat
+
+dahnames <- homdata$data$est.c$Code
+
+colnames(dath) <- dahnames
+
+
+dath <- dath %>%
+  as_tibble() %>%
+  mutate(Datums = datumi) %>%
+  dplyr::select(Datums, everything())
+
+series <- list()
+abs_errors <- vector()
+
+
+for (i in seq_along(datnames)) {
+  series_name <- datnames[i]
+  real_ser <- climatol_temp_cor_daily_s %>%
+    dplyr::select(matches(series_name)) %>%
+    purrr::map(extract_last, 100)
+  
+  hom_series <- dath %>%
+    dplyr::select(matches(series_name))
+  
+  comp_ser <- hom_series %>%
+    purrr::map(extract_last, 100)
+  
+  errors <- compare_series(real_ser, comp_ser)
+  real_idx <- which.min(errors)
+  
+  hom_series <- hom_series %>%
+    dplyr::select(real_idx) %>%
+    set_colnames(series_name)
+  
+  series[[i]] <- hom_series
+  abs_errors[i] <- errors[real_idx]
+}
+
+homogenizetie_dati <- bind_cols(series) %>%
+  mutate(Datums = datumi) %>%
+  dplyr::select(Datums, everything())
+
+climatol_cor_homdata <- homogenizetie_dati
