@@ -14,10 +14,10 @@ source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/Recode_stations.R",
 
 # Sakārto datus -----------------------------------------------------------
 
-temp_daily <- read_csv("Dati/MeanT_daily.csv")
+# temp_daily <- read_csv("Dati/MeanT_daily.csv")
+temp_daily <- temp_d
 
-temp_daily <- temp_daily %>%
-  mutate(Merijums = ifelse(Merijums == -999.9, NA, Merijums))
+korig_temp_daily <- korig_temp_d
 
 # Unikālās stacijas
 data_stacs <- temp_daily$Stacija %>% unique()
@@ -58,62 +58,102 @@ climatol_temp_coords <- climatol_temp_coords %>%
 
 # Climatol nav tik draudzīgs pret datu iztrūkumiem kā ACMANT, tādēļ nepieciešams
 # atfiltrēt rindu, kurā iztrūkst mērījumi
-temp_daily %>%
-  mutate(Gads = year(Datums)) %>%
-  group_by(Stacija, Gads) %>%
-  summarise(NA_skaits = sum(is.na(Merijums))) %>%
-  spread(Stacija, NA_skaits)
 
 # Tādi normāli priekš CLIMATOL mērījumi sākas no 1947. gada. 
-climatol_temp_daily <- temp_daily %>%
-  filter(year(Datums) >= 1947)
-
-climatol_temp_daily <- climatol_temp_daily %>%
+# Raw dati
+climatol_temp_raw_daily <- temp_daily %>%
+  filter(year(Datums) >= 1947) %>%
   arrange(Stacija, Datums) %>%
   filter(year(Datums) <= 2020)
 
 # Nost metamās stacijas - CLIMATOL nestrādā
-nevajag_clim_stacs <- climatol_temp_daily %>%
+nevajag_clim_stacs <- climatol_temp_raw_daily %>%
   group_by(Stacija) %>%
   summarise(Mer_skaits = n(),
             NA_skaits = sum(is.na(Merijums))) %>% 
   filter(NA_skaits >= 11444) %>%
   pull(Stacija)
 
-climatol_temp_daily <- climatol_temp_daily %>%
+climatol_temp_raw_daily <- climatol_temp_raw_daily %>%
   filter(!Stacija %in% nevajag_clim_stacs)
 
-climatol_temp_coords <- climatol_temp_coords %>%
+climatol_temp_raw_coords <- climatol_temp_coords %>%
   filter(!GH_ID %in% nevajag_clim_stacs)
+
+
+# Koriģētie dati
+climatol_temp_cor_daily <- korig_temp_daily %>%
+  filter(year(Datums) >= 1947) %>%
+  arrange(Stacija, Datums) %>%
+  filter(year(Datums) <= 2020)
+
+nevajag_clim_cor_stacs <- climatol_temp_cor_daily %>%
+  group_by(Stacija) %>%
+  summarise(Mer_skaits = n(),
+            NA_skaits = sum(is.na(Merijums))) %>% 
+  filter(NA_skaits >= 11444) %>%
+  pull(Stacija)
+
+climatol_temp_cor_daily <- climatol_temp_cor_daily %>%
+  filter(!Stacija %in% nevajag_clim_cor_stacs)
+
+climatol_temp_cor_coords <- climatol_temp_coords %>%
+  filter(!GH_ID %in% nevajag_clim_cor_stacs)
+
+
 
 # Pagaidām gan stacijas nost nemet
 # Sakārto un ieraksta datus atbilstoši CLIMATOL formātam -----------------------
-write(climatol_temp_daily$Merijums, "Dati/Climatol_data/LVMeanT_1947-2020.dat", 
+write(climatol_temp_raw_daily$Merijums, "Dati/Climatol_data/LVMeanTraw_1947-2020.dat", 
       ncolumns = 5) # Ieraksta Climatol formātā
 
-climatol_temp_coords %>%
-  write.table("Dati/Climatol_data/LVMeanT_1947-2020.est",
+climatol_temp_raw_coords %>%
+  write.table("Dati/Climatol_data/LVMeanTraw_1947-2020.est",
               row.names = F, col.names = F) # Ieraksta coords Climatol formātā
 
+write(climatol_temp_cor_daily$Merijums, "Dati/Climatol_data/LVMeanTcor_1947-2020.dat",
+      ncolumns = 5)
+climatol_temp_cor_coords %>%ļ
+  write.table("Dati/Climatol_data/LVMeanTcor_1947-2020.est", row.names = F, col.names = F)
 
-# Climatol homogenizācija -------------------------------------------------
+
+# Climatol raw datu homogenizācija -------------------------------------------------
 setwd("./Dati/Climatol_data")
 
-# No sākuma viens test run
-# homogen("LVMeanT", 1947, 2020, expl = T)
-# outrename("LVMeanT", 1947, 2020, "expl_analysis")
+# No sākuma viens exploratory analysis run
+homogen("LVMeanTraw", 1947, 2020, expl = T)
+outrename("LVMeanTraw", 1947, 2020, "expl_analysis")
 
 # homogen("LVMeanT", 1947, 2020)
 # outrename("LVMeanT", 1947, 2020, "test")
 # setwd("../../")
 
 # Mēnešu sērijas, jo dienu sērijas utterly failoja
-dd2m("LVMeanT", 1947, 2020)
-homogen("LVMeanT-m", 1947, 2020)
-homogen("LVMeanT", 1947, 2020, dz.max = 7, metad = T)
-outrename("LVMeanT", 1947, 2020, "daily_monbrks")
+dd2m("LVMeanTraw", 1947, 2020)
+homogen("LVMeanTraw-m", 1947, 2020)
+homogen("LVMeanTraw", 1947, 2020, dz.max = 7, metad = T)
+outrename("LVMeanTraw", 1947, 2020, "daily_monbrks")
 
 setwd("../../")
+
+# Climatol koriģēto datu homogenizācija -----------------------------------
+
+setwd("./Dati/Climatol_data")
+
+# No sākuma viens exploratory analysis run
+homogen("LVMeanTcor", 1947, 2020, expl = T)
+outrename("LVMeanTcor", 1947, 2020, "expl_analysis")
+
+
+# Mēnešu sērijas, jo dienu sērijas utterly failoja
+dd2m("LVMeanTcor", 1947, 2020)
+homogen("LVMeanTcor-m", 1947, 2020)
+homogen("LVMeanTcor", 1947, 2020, dz.max = 7, metad = T)
+outrename("LVMeanTcor", 1947, 2020, "daily_monbrks")
+
+setwd("../../")
+
+
 # Test run over -----------------------------------------------------------
 
 
