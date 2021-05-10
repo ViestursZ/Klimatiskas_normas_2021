@@ -5,17 +5,22 @@ library(lubridate)
 library(magrittr)
 
 
-# Ielādē ACMANT datus -----------------------------------------------------
+# Ielādē neapstrādātos temperatūras ACMANT homogenizētus datus ------------
 
 # Listo failus
-ACMANT_files <- list.files("Homogenizacija/Programmas/ACMANTv4.3/Output/", pattern = "v", full.names = T)
-ACMANT_reliabilityf <- list.files("Homogenizacija/Programmas/ACMANTv4.3/Output/", pattern = "i")
-ACMANT_breaksf <- "Homogenizacija/Programmas/ACMANTv4.3/Output/MeanT_breaks.txt"
+ACMANT_files <- list.files("Dati/ACMANT_homogenized_data/MeanT/Raw/", pattern = "v.txt$", full.names = T)
+ACMANT_reliabilityf <- list.files("Homogenizacija/Programmas/ACMANTv4.3/Output/", pattern = "i.txt$")
+ACMANT_breaksf <- "Homogenizacija/Programmas/ACMANTv4.3/Output/AvgTn_breaks.txt"
 
 ACMANT_data <- purrr::map(ACMANT_files, read_table, skip = 1, col_names = F, skip_empty_rows = F)
 ACMANT_stations <- purrr::map_chr(ACMANT_files, read_lines, n_max = 1)
 
 ACMANT_stations <- str_remove_all(ACMANT_stations, " ")
+
+
+# Ielādē apstrādātos temperatūras ACMANT homogenizētus datus --------------
+
+
 
 # Datu sakārtošana --------------------------------------------------------
 
@@ -31,6 +36,5 @@ ACMANT_data_t <- ACMANT_data %>%
   select(-Gads, -Menesis, -Diena)
 
 
-# Aprekina ACMANT normas --------------------------------------------------
 
 
