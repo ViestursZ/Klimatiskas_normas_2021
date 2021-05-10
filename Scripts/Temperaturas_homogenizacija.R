@@ -113,7 +113,6 @@ DAGDA_korig <- korig_dati %>%
   mutate(Stacija = "RIDAGDA")
 
 
-
 korig_dati <- korig_dati %>%
   filter(!Stacija %in% c("DAGDA", "RIDAGDA")) %>%
   bind_rows(DAGDA_korig) %>%
@@ -124,7 +123,7 @@ korig_dati <- korig_dati %>%
   filter(!Stacija %in% c("RIRE99MS", "RIREZEKN")) %>%
   bind_rows(REZEKNE_korig)  %>%
   filter(!Stacija == "RUCAVA") %>%
-  bind_rows(RUCAVA_korig)  %$% unique(Stacija)
+  bind_rows(RUCAVA_korig)
 
 # Aprēķina diennakts datus ------------------------------------------------
 
@@ -132,34 +131,39 @@ korig_dati <- korig_dati %>%
 temp_d <- temp_dati %>%
   mutate(Datums = date(Datums_laiks)) %>%
   group_by(Stacija, Datums) %>%
-  summarise(Merijums = round(f_mean_na(Merijums, percentage_na = 0.2, consec_values = F), 1),
-            Mer_skaits = n())
+  summarise(Merijums = round(f_mean_na(Merijums, percentage_na = 0.2, consec_values = F), 1))
+
+korig_temp_d <- korig_dati %>%
+  mutate(Datums = date(Datums_laiks)) %>%
+  group_by(Stacija, Datums) %>%
+  summarise(Merijums = round(f_mean_na(Merijums, percentage_na = 0.2, consec_values = F), 1))
+
 
 
 # Ielādē datu pagarināšanas exceli, datu salīdzināšanai -------------------
-temp_d_old <- read_excel("//dc03/pd/KMN/Projekti/Projekts-KLIMATS/DATU_Pagarinasana/Temperatura/Diennakts_vid_temperatura_1961-2020.xlsx")
-
-temp_old_Ainazi <- temp_d_old %>%
-  mutate(Datums = ymd(str_c(Gads, Menesis, Datums, sep = "-"))) %>%
-  select(Datums, Ainazi)
-
-temp_new_Ainazi <- temp_d %>%
-  filter(Stacija == "RIAI99PA") %>%
-  select(Datums, Merijums)
-
-# Salīdzina divas stacijas
-
-temp_salidz <- inner_join(temp_old_Ainazi, temp_new_Ainazi)
-temp_salidz_graph_ainazi <- temp_salidz %>%
-  rename(Old = Ainazi, New = Merijums) %>%
-  mutate(Diff = New - Old)
-
-temp_salidz_graph_ainazi <- temp_salidz_graph_ainazi %>%
-  ggplot(aes(Diff)) + 
-  geom_histogram(bins = 100, col= "black")+
-  ggtitle("Ainazi salidzinajums")
-
-ggplotly(temp_salidz_graph_ainazi)
+# temp_d_old <- read_excel("//dc03/pd/KMN/Projekti/Projekts-KLIMATS/DATU_Pagarinasana/Temperatura/Diennakts_vid_temperatura_1961-2020.xlsx")
+# 
+# temp_old_Ainazi <- temp_d_old %>%
+#   mutate(Datums = ymd(str_c(Gads, Menesis, Datums, sep = "-"))) %>%
+#   select(Datums, Ainazi)
+# 
+# temp_new_Ainazi <- temp_d %>%
+#   filter(Stacija == "RIAI99PA") %>%
+#   select(Datums, Merijums)
+# 
+# # Salīdzina divas stacijas
+# 
+# temp_salidz <- inner_join(temp_old_Ainazi, temp_new_Ainazi)
+# temp_salidz_graph_ainazi <- temp_salidz %>%
+#   rename(Old = Ainazi, New = Merijums) %>%
+#   mutate(Diff = New - Old)
+# 
+# temp_salidz_graph_ainazi <- temp_salidz_graph_ainazi %>%
+#   ggplot(aes(Diff)) + 
+#   geom_histogram(bins = 100, col= "black")+
+#   ggtitle("Ainazi salidzinajums")
+# 
+# ggplotly(temp_salidz_graph_ainazi)
 
 # Datu apstrāde -----------------------------------------------------------
 
@@ -167,14 +171,24 @@ ggplotly(temp_salidz_graph_ainazi)
 temp_d <- temp_d %>%
   filter(!Stacija %in% c("ADAZI", "SELIEPA", "SEVENTSP", "REZEKNE", "RIGAM165", "TEST10M"))
 
+korig_temp_d <- korig_temp_d %>%
+  filter(!Stacija %in% c("ADAZI", "SELIEPA", "SEVENTSP", "REZEKNE", "RIGAM165", "TEST10M"))
+
 # Kādas ir stacijas
 data_stacs <- temp_d %$% unique(Stacija)
+korig_stacs <- korig_temp_d %$% unique(Stacija)
 
 # Jāapvieno Rīgas
 temp_d <- temp_d %>%
   spread(Stacija, Merijums) %>%
   mutate(RIGASLU = ifelse(is.na(RIGASLU), RIAS99PA, RIGASLU)) %>%
   select(-RIAS99PA)
+
+korig_temp_d <- korig_temp_d %>%
+  spread(Stacija, Merijums) %>%
+  mutate(RIGASLU = ifelse(is.na(RIGASLU), RIAS99PA, RIGASLU)) %>%
+  select(-RIAS99PA)
+
 
 # Jāapvieno Dagdas un Rēzeknes
 temp_d <- temp_d %>%
@@ -190,11 +204,18 @@ iztr_df <- data.frame(Datums = iztr_dateseq)
 temp_d <- temp_d %>% left_join(iztr_df, .,) %>%
   gather(Stacija, Merijums, -Datums) 
 
+korig_temp_d <- korig_temp_d %>%
+  left_join(iztr_df, .,) %>%
+  gather(Stacija, Merijums, -Datums) 
 
-data_stacs <- data_stacs[!data_stacs %in% c("RIAS99PA", "RIRE99MS", "RIDAGDA")]
+data_stacs <- data_stacs[!data_stacs %in% c("RIAS99PA", "RIRE99MS", "DAGDA")]
+korig_stacs <- korig_stacs[!korig_stacs %in% c("RIAS99PA")]
 
 temp_d %>%
   write_csv("Dati/MeanT_daily.csv")
+
+korig_temp_d %>%
+  write_csv("Dati/MeanT_daily_korig.csv")
 
 
 
