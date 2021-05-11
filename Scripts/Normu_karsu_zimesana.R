@@ -339,18 +339,49 @@ for (j in seq_along(dekades)) {
 
 
 # Apvieno menesu normas ---------------------------------------------------
-
 uh_men_norm_l <- uh_month_normal %>%
   pivot_longer(-DATE, names_to = "Stacija", values_to = "UNH")
+
+uh_men_korig_normal <- uh_month_korig_normal %>%
+  pivot_longer(-DATE, names_to = "Stacija", values_to = "UNH_korig")
+
+old_norm_month_l <- old_mon %>%
+  pivot_longer(-DATE, names_to = "Stacija", values_to = "Old_norma")
 
 ac_men_norm_l <- ac_month_normal %>%
   pivot_longer(-DATE, names_to = "Stacija", values_to = "ACMANT")
 
+ac_men_korig_norm_l <- ac_month_korig_normal %>%
+  pivot_longer(-DATE, names_to = "Stacija", values_to = "ACMANT_korig")
+
 clim_men_norm_l <- clim_month_normal %>%
   pivot_longer(-DATE, names_to = "Stacija", values_to = "CLIMATOL")
 
-men_norm_l <- inner_join(uh_men_norm_l, ac_men_norm_l) %>%
+clim_men_korig_norm_l <- clim_month_korig_normal %>%
+  pivot_longer(-DATE, names_to = "Stacija", values_to = "CLIMATOL_korig")
+
+men_norm_l <- inner_join(uh_men_norm_l, uh_men_korig_normal) %>%
+  inner_join(old_norm_month_l) %>%
+  inner_join(ac_men_norm_l) %>%
+  inner_join(ac_men_korig_norm_l) %>%
   inner_join(clim_men_norm_l) %>%
+  inner_join(clim_men_korig_norm_l) 
+
+men_norm_l_starpibas <- men_norm_l %>%
+  transmute(DATE = DATE,
+            Stacija = Stacija,
+            UNH = UNH - Old_norma,
+            UNH_cor = UNH_korig - Old_norma,
+            ACMANT = ACMANT - Old_norma,
+            ACMANT_cor = ACMANT_korig - Old_norma,
+            CLIMATOL = CLIMATOL - Old_norma,
+            CLIMATOL_cor = CLIMATOL_korig - Old_norma)
+
+
+men_norm_l <- men_norm_l %>%
+  pivot_longer(-c(DATE, Stacija), names_to = "Metode", values_to = "Val")
+
+men_norm_l_starpibas <- men_norm_l_starpibas %>%
   pivot_longer(-c(DATE, Stacija), names_to = "Metode", values_to = "Val")
 
 
@@ -405,7 +436,7 @@ for (j in seq_along(menesi)) {
   inter_data <- inter_data %>%
     pivot_longer(-c(X, Y), names_to = "Metode", values_to = "Val")
   
-  # Dekāžu normu plot
+  # Mēnešu normu plot
   
   ggplot() +
     geom_raster(data = inter_data, aes(X, Y, fill = Val)) +
@@ -417,9 +448,80 @@ for (j in seq_along(menesi)) {
     scale_fill_distiller(palette = "YlOrRd", direction = 1) +
     ggtitle(paste0("Vidējā gaisa temperatūra, mēnesis ", menesi[j])) + 
     # geom_text_repel() +
-    facet_grid(Metode~.) + 
+    facet_wrap(~Metode) + 
     ggsave(paste0("./Grafiki/Homog_normu_salidzinajums/Menesi_kartes/Menesis_", menesi[j], ".png"),
            device = png(width = 1100, height = 700))
   dev.off()
 }
 
+
+
+# Mēnešu normu starpības
+menesi <- unique(men_norm_l_starpibas$DATE)
+
+for (j in seq_along(menesi)) {
+  men_norm_st <- men_norm_l_starpibas %>%
+    filter(DATE == menesi[j]) %>%
+    left_join(stacijas_st, by = c("Stacija" = "GH_ID")) %>% 
+    select(DATE, Stacija, Metode, h = ELEVATION, cont = Temperatura_kontinentalitate, 
+           x = X, y = Y, t = Val, geom)
+  
+  # Viena metode at a time
+  metodes <- unique(men_norm_st$Metode)
+  met_list <- list()
+  
+  for (i in seq_along(metodes)) {
+    men_norm_st_2 <- men_norm_st %>%
+      filter(Metode == metodes[i]) %>%
+      filter(!is.na(t))
+    
+    men_norm_st_2 <- st_as_sf(men_norm_st_2, crs = 3059)
+    men_norm_sp <- as_Spatial(men_norm_st_2)
+    
+    proj4string(grid) <- proj4string(men_norm_sp)
+    
+    # Pārējie interpolācijas parametri
+    # Ja NA, tad default vērtības
+    inter_range <- NA
+    inter_model <- NA
+    inter_vtype <- NA
+    
+    krig <- uk_interpol(men_norm_sp, grid, model = t ~ 1)
+    
+    norm_raster <- raster(`gridded<-`(krig$uk, T)) %>%
+      rasterToPoints() %>%
+      as.data.frame() %>% 
+      `names<-`(c("X", "Y", metodes[i]))
+    
+    met_list[[i]] <- norm_raster
+  }
+  
+  inter_data <- met_list[[1]] %>%
+    inner_join(met_list[[2]]) %>%
+    inner_join(met_list[[3]]) %>%
+    inner_join(met_list[[4]]) %>%
+    inner_join(met_list[[5]]) %>%
+    inner_join(met_list[[6]]) 
+  
+  inter_data <- inter_data %>%
+    pivot_longer(-c(X, Y), names_to = "Metode", values_to = "Val")
+  
+  # Mēnešu normu plot
+  
+  limits <- max(abs(inter_data$Val)) * c(-1, 1) #Limiti +  ir sarkani, - zili
+  
+  ggplot() +
+    geom_raster(data = inter_data, aes(X, Y, fill = Val)) +
+    geom_sf(data = men_norm_st, aes(geometry = geom)) +
+    geom_text_repel(data = men_norm_st,
+                    aes(label = round(t, 1), geometry = geom),
+                    stat = "sf_coordinates") +
+    coord_sf(datum = "+init=epsg:3059") +
+    scale_fill_distiller(palette = "RdBu", direction = -1, limit = limits) +
+    ggtitle(paste0("Jaunās gaisa temperatūras normas salīdzinājums ar veco normu, mēnesis ", menesi[j])) + 
+    # geom_text_repel() +
+    facet_wrap(~Metode) + 
+    ggsave(paste0("./Grafiki/Homog_normu_salidzinajums/Menesi_starpibas_kartes/Menesis_starp_", menesi[j], ".png"),
+           device = png(width = 1100, height = 700))
+  dev.off()
+}
