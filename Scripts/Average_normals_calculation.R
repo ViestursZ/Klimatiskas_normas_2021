@@ -50,20 +50,21 @@ normas_apr <- function(x, time, diennakts = T, fja){  # time jāliek diena = 1, 
 
 # Ielādē datus -------------------------------------------------------------
 
-temp_daily <- read_csv("Dati/MeanT_daily.csv", col_types = c("D?n"))
+# temp_daily <- read_csv("Dati/MeanT_daily.csv", col_types = c("D?n"))
 korig_temp_daily <- read_csv("Dati/MeanT_daily_korig.csv", col_types = c("D?n"))
 
 # Pārsauc kolonnas, lai normāli rēķinātos normas
 
 # RAW nekoriģēto temperatūras datu normas ---------------------------------
-temp_daily <- temp_daily %>%
-  set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
-  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
 
-uh_day_normal <- normas_apr(temp_daily, time = 1, fja = 0)
-uh_dec_normal <- normas_apr(temp_daily, time = 2, fja = 0)
-uh_month_normal <- normas_apr(temp_daily, time = 3, fja = 0)
-uh_year_normal <- normas_apr(temp_daily, time = 4, fja = 0)
+# temp_daily <- temp_daily %>%
+#   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# uh_day_normal <- normas_apr(temp_daily, time = 1, fja = 0)
+# uh_dec_normal <- normas_apr(temp_daily, time = 2, fja = 0)
+# uh_month_normal <- normas_apr(temp_daily, time = 3, fja = 0)
+# uh_year_normal <- normas_apr(temp_daily, time = 4, fja = 0)
 
 
 # Koriģēto temperatūras datu normas ---------------------------------------
@@ -78,18 +79,20 @@ uh_year_korig_normal <- normas_apr(korig_temp_daily, time = 4, fja = 0)
 
 
 # ACMANT raw temperatūras norma -------------------------------------------
-# ACMANT normas
-ACMANT_data_trn <- ACMANT_data_t %>% # No format_ACMANT.R skripta
-  set_colnames(c("EG_GH_ID", "Value", "DATE")) %>%
-  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
 
-ac_day_normal <- normas_apr(ACMANT_data_trn, time = 1, fja = 0)
-ac_dec_normal <- normas_apr(ACMANT_data_trn, time = 2, fja = 0)
-ac_month_normal <- normas_apr(ACMANT_data_trn, time = 3, fja = 0)
-ac_year_normal <- normas_apr(ACMANT_data_trn, time = 4, fja = 0)
+# ACMANT normas
+# ACMANT_data_trn <- ACMANT_data_t %>% # No format_ACMANT.R skripta
+#   set_colnames(c("EG_GH_ID", "Value", "DATE")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# ac_day_normal <- normas_apr(ACMANT_data_trn, time = 1, fja = 0)
+# ac_dec_normal <- normas_apr(ACMANT_data_trn, time = 2, fja = 0)
+# ac_month_normal <- normas_apr(ACMANT_data_trn, time = 3, fja = 0)
+# ac_year_normal <- normas_apr(ACMANT_data_trn, time = 4, fja = 0)
 
 
 # ACMANT koriģētas temperatūras norma -------------------------------------
+
 # ACMANT normas
 ACMANT_kor_data_trn <- ACMANT_kor_data_t %>% # No format_ACMANT.R skripta
   set_colnames(c("EG_GH_ID", "Value", "DATE")) %>%
@@ -102,19 +105,21 @@ ac_year_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 4, fja = 0)
 
 
 # Climatol raw temperatūras datu norma ------------------------------------
-# Climatol normas 
-climatol_homdata_trn <- climatol_raw_homdata %>%  # No Climatol_analysis.R
-  pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
-  set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
-  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
 
-clim_day_normal <- normas_apr(climatol_homdata_trn, time = 1, fja = 0)
-clim_dec_normal <- normas_apr(climatol_homdata_trn, time = 2, fja = 0)
-clim_month_normal <- normas_apr(climatol_homdata_trn, time = 3, fja = 0)
-clim_year_normal <- normas_apr(climatol_homdata_trn, time = 4, fja = 0)
+# Climatol normas 
+# climatol_homdata_trn <- climatol_raw_homdata %>%  # No Climatol_analysis.R
+#   pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
+#   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# clim_day_normal <- normas_apr(climatol_homdata_trn, time = 1, fja = 0)
+# clim_dec_normal <- normas_apr(climatol_homdata_trn, time = 2, fja = 0)
+# clim_month_normal <- normas_apr(climatol_homdata_trn, time = 3, fja = 0)
+# clim_year_normal <- normas_apr(climatol_homdata_trn, time = 4, fja = 0)
 
 
 # Climatol koriģētu temperatūras datu norma -------------------------------
+
 climatol_cor_homdata_trn <- climatol_cor_homdata %>%  # No Climatol_analysis.R
   pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
