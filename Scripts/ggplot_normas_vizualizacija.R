@@ -197,12 +197,12 @@ for(i in c(1:length(stacijas))){
   
  gplot <- ggdec %>% ggplot(aes(x = DATE2)) +
     geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size=0.5) +
-    geom_line(aes(DATE2, y = norma_dec1, group = 1, color = "UH norma"), size = 1) +
+    # geom_line(aes(DATE2, y = norma_dec1, group = 1, color = "UH norma"), size = 1) +
     geom_line(aes(DATE2, y = norma_dec2, group = 1, color = "UH korig norma"), size = 1) +
     geom_line(aes(DATE2, y = norma_dec3, group = 1, color = "81-10 norma"), size = 1) +
-    geom_line(aes(DATE2, y = norma_dec4, group = 1, color = "AC norma"), size = 1) + 
+    # geom_line(aes(DATE2, y = norma_dec4, group = 1, color = "AC norma"), size = 1) + 
     geom_line(aes(DATE2, y = norma_dec5, group = 1, color = "AC korig norma"), size = 1) + 
-    geom_line(aes(DATE2, y = norma_dec6, group = 1, color = "Cl norma"), size = 1) +
+    # geom_line(aes(DATE2, y = norma_dec6, group = 1, color = "Cl norma"), size = 1) +
     geom_line(aes(DATE2, y = norma_dec7, group = 1, color = "Cl korig norma"), size = 1) +
     theme_classic() +
     scale_x_datetime(breaks = date_breaks(width = "1 month"), 
@@ -228,6 +228,12 @@ for(i in c(1:length(stacijas))){
  htmlwidgets::saveWidget(gpplot, file = paste0(stac,"_dec_normas.html"), selfcontained = T)
 }
 
+html_files <- list.files(pattern = ".html")
+nordir <- "./Grafiki/Homog_normu_salidzinajums/Dekades"
+old_html_files <- list.files(nordir, pattern = "html", full.names = T)
+file.remove(old_html_files)
+file.copy(html_files, nordir)
+file.remove(html_files)
 
 #### Mēneša plot ####
 # 
