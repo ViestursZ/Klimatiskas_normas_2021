@@ -17,9 +17,8 @@ source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/Recode_stations.R",
 # temp_daily <- read_csv("Dati/MeanT_daily.csv")
 temp_daily <- temp_d
 
-korig_temp_daily <- korig_temp_d
+korig_temp_daily <- korig_temp_d# Unikālās stacijas
 
-# Unikālās stacijas
 data_stacs <- temp_daily$Stacija %>% unique()
 
 # Ielādē koordinātu datus priekš CLIMATOL
@@ -113,28 +112,28 @@ climatol_temp_raw_coords %>%
 
 write(climatol_temp_cor_daily$Merijums, "Dati/Climatol_data/LVMeanTcor_1947-2020.dat",
       ncolumns = 5)
-climatol_temp_cor_coords %>%ļ
+climatol_temp_cor_coords %>%
   write.table("Dati/Climatol_data/LVMeanTcor_1947-2020.est", row.names = F, col.names = F)
 
 
 # Climatol raw datu homogenizācija -------------------------------------------------
-setwd("./Dati/Climatol_data")
-
-# No sākuma viens exploratory analysis run
-homogen("LVMeanTraw", 1947, 2020, expl = T)
-outrename("LVMeanTraw", 1947, 2020, "expl_analysis")
-
-# homogen("LVMeanT", 1947, 2020)
-# outrename("LVMeanT", 1947, 2020, "test")
+# setwd("./Dati/Climatol_data")
+# 
+# # No sākuma viens exploratory analysis run
+# homogen("LVMeanTraw", 1947, 2020, expl = T)
+# outrename("LVMeanTraw", 1947, 2020, "expl_analysis")
+# 
+# # homogen("LVMeanT", 1947, 2020)
+# # outrename("LVMeanT", 1947, 2020, "test")
+# # setwd("../../")
+# 
+# # Mēnešu sērijas, jo dienu sērijas utterly failoja
+# dd2m("LVMeanTraw", 1947, 2020)
+# homogen("LVMeanTraw-m", 1947, 2020)
+# homogen("LVMeanTraw", 1947, 2020, dz.max = 7, metad = T)
+# outrename("LVMeanTraw", 1947, 2020, "daily_monbrks")
+# 
 # setwd("../../")
-
-# Mēnešu sērijas, jo dienu sērijas utterly failoja
-dd2m("LVMeanTraw", 1947, 2020)
-homogen("LVMeanTraw-m", 1947, 2020)
-homogen("LVMeanTraw", 1947, 2020, dz.max = 7, metad = T)
-outrename("LVMeanTraw", 1947, 2020, "daily_monbrks")
-
-setwd("../../")
 
 # Climatol koriģēto datu homogenizācija -----------------------------------
 
