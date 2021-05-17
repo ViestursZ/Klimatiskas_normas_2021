@@ -7,6 +7,26 @@ library(tidyverse)
 
 Sys.setlocale("LC_ALL", "latvian_Latvia.1257")
 
+
+# Funkcijas ---------------------------------------------------------------
+
+merge_normas <- function(normas, merge_by) {
+  # normas              list ar normu mainīgajiem no Average_normals_calulation.R
+  # merge_by            kolonnu nosaukumui, pēc kuriem mergo lietas
+  if (!is.list(normas)) {
+    return("normas ir jābūt list")
+  }
+  
+  for (i in seq_along(normas)) {
+    if (i == 1) {normas_merge <- normas[i]
+  } else {
+    normas_merge <- merge(normas_merge, normas[i], by = merge_by)
+  }
+  }
+  return(normas_merge)
+}
+
+
 # Vecās normas ------------------------------------------------------------
 
 old_dec <- read_csv2("Dati/old_Videja_gaisa_temperatura_dek.csv")
@@ -31,9 +51,9 @@ old_mon <- old_mon %>%
 
   
 #### Diennakts plot ####
-norm1 <- uh_day_normal
-norm1 <- norm1 %>% mutate(DATE=substr(as.POSIXct(norm1$DATE, format='%m-%d'),6,10))
-norm11 <- norm1 %>% gather(EG_GH_ID, VALUE, -c(DATE))
+# norm1 <- uh_day_normal
+# norm1 <- norm1 %>% mutate(DATE=substr(as.POSIXct(norm1$DATE, format='%m-%d'),6,10))
+# norm11 <- norm1 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
 norma2 <- uh_day_korig_normal
 norma2 <- norma2 %>% mutate(DATE=substr(as.POSIXct(norma2$DATE, format='%m-%d'),6,10))
@@ -43,31 +63,28 @@ norma3 <- old_day
 norma3 <- norma3 %>% mutate(DATE=substr(as.POSIXct(norma3$DATE, format='%m-%d'),6,10))
 norma33 <- norma3 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
-norma4 <- ac_day_normal
-norma4 <- norma4 %>% mutate(DATE=substr(as.POSIXct(norma4$DATE, format='%m-%d'),6,10))
-norma44 <- norma4 %>% gather(EG_GH_ID, VALUE, -c(DATE))
+# norma4 <- ac_day_normal
+# norma4 <- norma4 %>% mutate(DATE=substr(as.POSIXct(norma4$DATE, format='%m-%d'),6,10))
+# norma44 <- norma4 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
 norma5 <- ac_day_korig_normal
 norma5 <- norma5 %>% mutate(DATE=substr(as.POSIXct(norma5$DATE, format='%m-%d'),6,10))
 norma55 <- norma5 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
-norma6 <- clim_day_normal
-norma6 <- norma6 %>% mutate(DATE=substr(as.POSIXct(norma6$DATE, format='%m-%d'),6,10))
-norma66 <- norma6 %>% gather(EG_GH_ID, VALUE, -c(DATE))
+# norma6 <- clim_day_normal
+# norma6 <- norma6 %>% mutate(DATE=substr(as.POSIXct(norma6$DATE, format='%m-%d'),6,10))
+# norma66 <- norma6 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
 norma7 <- clim_day_korig_normal
-norma7 <- norma6 %>% mutate(DATE=substr(as.POSIXct(norma6$DATE, format='%m-%d'),6,10))
-norma77 <- norma6 %>% gather(EG_GH_ID, VALUE, -c(DATE))
+norma7 <- norma7 %>% mutate(DATE=substr(as.POSIXct(norma7$DATE, format='%m-%d'),6,10))
+norma77 <- norma7 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
-normas_merge <- merge(norm11, norma22, by = c("EG_GH_ID","DATE")) %>%
-  merge(norma33, by = c("EG_GH_ID","DATE")) %>%
-  merge(norma44, by = c("EG_GH_ID","DATE")) %>%
-  merge(norma55, by = c("EG_GH_ID","DATE")) %>%
-  merge(norma66, by = c("EG_GH_ID","DATE")) %>%
-  merge(norma77, by = c("EG_GH_ID","DATE"))
+normas_merge <- merge_normas(normas = list(norma22, norma33, norma55, norma77), 
+                             merge_by = c("EG_GH_ID","DATE"))
 
 
-names(normas_merge)[c(3:9)] <- c("norma1", "norma2", "norma3", "norma4", "norma5", "norma6", "norma7")
+# names(normas_merge)[c(3:9)] <- c("norma1", "norma2", "norma3", "norma4", "norma5", "norma6", "norma7")
+names(normas_merge)[c(3:6)] <- c("norma2", "norma3", "norma5", "norma7")
 
 normas_merge <- normas_merge %>% arrange(EG_GH_ID, DATE)
 ##
@@ -83,12 +100,12 @@ for(i in c(1:length(stacijas))){
   
   gplot <- ggday %>% ggplot(aes(x = DATE2)) +
     geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size=0.5) +
-    geom_line(aes(DATE2, y = norma1, group = 1, color = "UH norma"), size = 1) +
+    # geom_line(aes(DATE2, y = norma1, group = 1, color = "UH norma"), size = 1) +
     geom_line(aes(DATE2, y = norma2, group = 1, color = "UH korig norma"), size = 1) +
     geom_line(aes(DATE2, y = norma3, group = 1, color = "81-10 norma"), size = 1) +
-    geom_line(aes(DATE2, y = norma4, group = 1, color = "AC norma"), size = 1) + 
+    # geom_line(aes(DATE2, y = norma4, group = 1, color = "AC norma"), size = 1) + 
     geom_line(aes(DATE2, y = norma5, group = 1, color = "AC korig norma"), size = 1) + 
-    geom_line(aes(DATE2, y = norma6, group = 1, color = "Cl norma"), size = 1) +
+    # geom_line(aes(DATE2, y = norma6, group = 1, color = "Cl norma"), size = 1) +
     geom_line(aes(DATE2, y = norma7, group = 1, color = "Cl korig norma"), size = 1) +
     theme_classic() +
     scale_x_datetime(breaks = date_breaks(width = "1 month"), 
@@ -101,8 +118,8 @@ for(i in c(1:length(stacijas))){
     scale_color_manual(values = c("UH norma" = "#377eb8",
                                   "UH korig norma" = "#984ea3",
                                   "81-10 norma" = "#ff7f00",
-                                  "AC norma" = "#a65628", 
-                                  "AC korig norma" = "#ffff33",
+                                  "AC norma" = "#ffff33",
+                                  "AC korig norma" = "#a65628",
                                   "Cl norma" = "#e41a1c",
                                   "Cl korig norma" = "#4daf4a")) +
   ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dienas/", stac,"_dien_normas.png"))
@@ -111,10 +128,17 @@ for(i in c(1:length(stacijas))){
   htmlwidgets::saveWidget(gpplot, file = paste0(stac,"_dien_normas.html"), selfcontained = T)
 }
 
+html_files <- list.files(pattern = ".html")
+nordir <- "./Grafiki/Homog_normu_salidzinajums/Dienas"
+old_html_files <- list.files(nordir, pattern = "html", full.names = T)
+file.remove(old_html_files)
+file.copy(html_files, nordir)
+file.remove(html_files)
+
 #### Dekāde plot ####
-norma_dec1 <- uh_dec_normal
-norma_dec1 <- norma_dec1 %>% mutate(DATE=substr(as.POSIXct(norma_dec1$DATE, format='%m-%d'),6,10))
-norma_dec11 <- norm_dec1 %>% gather(EG_GH_ID, VALUE, -c(DATE))
+# norma_dec1 <- uh_dec_normal
+# norma_dec1 <- norma_dec1 %>% mutate(DATE=substr(as.POSIXct(norma_dec1$DATE, format='%m-%d'),6,10))
+# norma_dec11 <- norm_dec1 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
 norma_dec2 <- uh_dec_korig_normal
 norma_dec2 <- norma_dec2 %>% mutate(DATE=substr(as.POSIXct(norma_dec2$DATE, format='%m-%d'),6,10))
@@ -124,31 +148,28 @@ norma_dec3 <- old_dec
 norma_dec3 <- norma_dec3 %>% mutate(DATE=substr(as.POSIXct(norma_dec3$DATE, format='%m-%d'),6,10))
 norma_dec33 <- norma_dec3 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
-norma_dec4 <- ac_dec_normal
-norma_dec4 <- norma_dec4 %>% mutate(DATE=substr(as.POSIXct(norma_dec4$DATE, format='%m-%d'),6,10))
-norma_dec44 <- norma_dec4 %>% gather(EG_GH_ID, VALUE, -c(DATE))
+# norma_dec4 <- ac_dec_normal
+# norma_dec4 <- norma_dec4 %>% mutate(DATE=substr(as.POSIXct(norma_dec4$DATE, format='%m-%d'),6,10))
+# norma_dec44 <- norma_dec4 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
 norma_dec5 <- ac_dec_korig_normal
 norma_dec5 <- norma_dec5 %>% mutate(DATE=substr(as.POSIXct(norma_dec5$DATE, format='%m-%d'),6,10))
 norma_dec55 <- norma_dec5 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
-norma_dec6 <- clim_dec_normal
-norma_dec6 <- norma_dec6 %>% mutate(DATE=substr(as.POSIXct(norma_dec6$DATE, format='%m-%d'),6,10))
-norma_dec66 <- norma_dec6 %>% gather(EG_GH_ID, VALUE, -c(DATE))
+# norma_dec6 <- clim_dec_normal
+# norma_dec6 <- norma_dec6 %>% mutate(DATE=substr(as.POSIXct(norma_dec6$DATE, format='%m-%d'),6,10))
+# norma_dec66 <- norma_dec6 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
 norma_dec7 <- clim_dec_korig_normal
-norma_dec7 <- norma_dec6 %>% mutate(DATE=substr(as.POSIXct(norma_dec6$DATE, format='%m-%d'),6,10))
-norma_dec77 <- norma_dec6 %>% gather(EG_GH_ID, VALUE, -c(DATE))
-
-dec_norm <- merge(norma_dec11, norma_dec22, by = c("EG_GH_ID","DATE")) %>%
-  merge(norma_dec33, by = c("EG_GH_ID","DATE")) %>%
-  merge(norma_dec44, by = c("EG_GH_ID","DATE")) %>%
-  merge(norma_dec55, by = c("EG_GH_ID","DATE")) %>%
-  merge(norma_dec66, by = c("EG_GH_ID","DATE")) %>%
-  merge(norma_dec77, by = c("EG_GH_ID","DATE"))
+norma_dec7 <- norma_dec7 %>% mutate(DATE=substr(as.POSIXct(norma_dec7$DATE, format='%m-%d'),6,10))
+norma_dec77 <- norma_dec7 %>% gather(EG_GH_ID, VALUE, -c(DATE))
 
 
-names(dec_norm)[c(3:9)] <- c("norma_dec1", "norma_dec2", "norma_dec3", "norma_dec4", "norma_dec5", "norma_dec6", "norma_dec7")
+dec_norm <- merge_normas(normas = list(norma_dec22, norma_dec33, norma_dec55, norma_dec77), 
+                         merge_by = c("EG_GH_ID","DATE"))
+
+# names(dec_norm)[c(3:9)] <- c("norma_dec1", "norma_dec2", "norma_dec3", "norma_dec4", "norma_dec5", "norma_dec6", "norma_dec7")
+names(dec_norm)[c(3:6)] <- c("norma_dec2", "norma_dec3", "norma_dec5", "norma_dec7")
 
 dec_norm <- dec_norm %>% arrange(EG_GH_ID, DATE)
 dec_norm$DATE <- as.POSIXct(paste0(substr(dec_norm$DATE,4,5),"-",substr(dec_norm$DATE,1,2)), format = "%d-%m")
@@ -194,8 +215,8 @@ for(i in c(1:length(stacijas))){
     scale_color_manual(values = c("UH norma" = "#377eb8",
                                  "UH korig norma" = "#984ea3",
                                  "81-10 norma" = "#ff7f00",
-                                 "AC norma" = "#a65628", 
-                                 "AC korig norma" = "#ffff33",
+                                 "AC norma" = "#ffff33", 
+                                 "AC korig norma" = "#a65628",
                                  "Cl norma" = "#e41a1c",
                                  "Cl korig norma" = "#4daf4a")) + 
     ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dekades/", stac,"_dek_normas.png"))
