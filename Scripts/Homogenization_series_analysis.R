@@ -4,6 +4,10 @@ library(tidyverse)
 library(plotly)
 library(lubridate)
 
+
+# Ielādē gaisa temperatūras koeficientus ----------------------------------
+
+
 # Ielādē time-series ------------------------------------------------------
 
 temp_daily <- read_csv("Dati/MeanT_daily.csv")
@@ -16,13 +20,14 @@ temp_daily <- temp_daily %>%
 temp_daily <- temp_daily %>%
   set_colnames(c("DATE", "EG_GH_ID", "Value"))
 
-
 ACMANT_data_trn <- ACMANT_data_t %>% # No format_ACMANT.R skripta
   set_colnames(c("EG_GH_ID", "Value", "DATE"))
 
 climatol_homdata_trn <- climatol_homdata %>%  # No Climatol_analysis.R
   pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
   set_colnames(c("DATE", "EG_GH_ID", "Value"))
+
+
 
 
 # Ielādē staciju metadatus ------------------------------------------------
@@ -234,3 +239,30 @@ for (stac in stacs) {
 }
 
 
+# Linijas_pa_gadiem -------------------------------------------------------
+
+
+ACMANT_kor_data_t %>%
+  mutate(Gads = year(Datums),
+         Gada_diena = yday(Datums)) %>%
+  group_by(Gads) %>%
+  filter(Gads >= 1991) %>%
+  filter(Stacija == "RIDM99MS") %>%
+  ggplot() + 
+  geom_smooth(aes(Gada_diena, Merijums, group = Gads, col = Gads), se = F) + 
+  scale_color_distiller(palette = "Blues", direction = 1) +
+  ggtitle("ACMANT")
+
+
+  # 
+
+korig_temp_daily %>%
+  mutate(Gads = year(DATE),
+         Gada_diena = yday(DATE)) %>%
+  group_by(Gads) %>%
+  filter(Gads >= 1991) %>%
+  filter(EG_GH_ID == "RIDM99MS") %>%
+  ggplot() + 
+  geom_smooth(aes(Gada_diena, Value, group = Gads, col = Gads), se = F) + 
+  scale_color_distiller(palette = "Blues", direction = 1) +
+  ggtitle("raw")

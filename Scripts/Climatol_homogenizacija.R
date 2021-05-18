@@ -17,7 +17,7 @@ source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/Recode_stations.R",
 # temp_daily <- read_csv("Dati/MeanT_daily.csv")
 temp_daily <- temp_d
 
-korig_temp_daily <- korig_temp_d# Unikālās stacijas
+korig_temp_daily <- korig_temp_d # Unikālās stacijas
 
 data_stacs <- temp_daily$Stacija %>% unique()
 

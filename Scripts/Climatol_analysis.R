@@ -114,7 +114,7 @@ vals <- list("ini" = ini, "nd" = nd, "ndec" = ndec, "ne" = ne, "nei" = nei,
 data <- list("dah" = dah, "dat" = dat, "est.c" = est.c)
 homdata <- list("vals" = vals, "data" = data)
 
-
+data
 # Sakārto datu kopas
 climatol_temp_cor_daily_s <- climatol_temp_cor_daily %>% # Dati no Climatol_homogenizacija.R skripta
   spread(Stacija, Merijums)
@@ -169,3 +169,4 @@ homogenizetie_dati <- bind_cols(series) %>%
   dplyr::select(Datums, everything())
 
 climatol_cor_homdata <- homogenizetie_dati
+climatol_cor_homdata

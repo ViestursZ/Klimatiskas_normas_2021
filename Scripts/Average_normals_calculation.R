@@ -130,3 +130,9 @@ clim_dec_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 2, fja = 0)
 clim_month_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 3, fja = 0)
 clim_year_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 4, fja = 0)
 
+
+
+
+# Grafiki -----------------------------------------------------------------
+
+

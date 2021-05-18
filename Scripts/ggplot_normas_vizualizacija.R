@@ -18,9 +18,9 @@ merge_normas <- function(normas, merge_by) {
   }
   
   for (i in seq_along(normas)) {
-    if (i == 1) {normas_merge <- normas[i]
+    if (i == 1) {normas_merge <- normas[[i]]
   } else {
-    normas_merge <- merge(normas_merge, normas[i], by = merge_by)
+    normas_merge <- full_join(normas_merge, normas[[i]], by = merge_by, all.x = T)
   }
   }
   return(normas_merge)
@@ -34,16 +34,19 @@ old_dec <- old_dec %>%
   mutate(DATE = str_c(str_replace(format(old_dec$MON), " ", "0"),
                       paste0("0", format(old_dec$DATE)),
                       sep = "-")) %>%
-  select(-MON)
+  dplyr::select(-MON) %>%
+  rename(RIREZEKN = RIRE99MS)
 
 old_day <- read_csv2("Dati/old_Videja_gaisa_temperatura_day.csv")
 old_day <- old_day %>%
   mutate(DATE = str_c(MON, DATE, sep = "-")) %>%
-  select(-MON)
+  dplyr::select(-MON) %>%
+  rename(RIREZEKN = RIRE99MS)
 
 old_mon <- read_csv2("Dati/old_Videja_gaisa_temperatura_men.csv")
 old_mon <- old_mon %>%
-  slice(1:12)
+  slice(1:12) %>%
+  rename(RIREZEKN = RIRE99MS)
 
 old_mon <- old_mon %>%
   mutate(DATE = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"))
