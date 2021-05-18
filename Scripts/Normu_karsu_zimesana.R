@@ -6,6 +6,7 @@ library(raster)
 library(gstat)
 library(tidyverse)
 library(ggrepel)
+library(lubridate)
 
 
 # Funkcijas --------------------------------------------------------------------
@@ -107,42 +108,47 @@ clim_year_korig_normal
 
 
 # Apvieno dekāžu normas un izveido kartes ---------------------------------
-uh_dec_norm_l <- uh_dec_normal %>%
-  pivot_longer(-DATE, names_to = "Stacija", values_to = "UNH")
+# uh_dec_norm_l <- uh_dec_normal %>%
+#   pivot_longer(-DATE, names_to = "Stacija", values_to = "UNH")
 
-uh_dec_korig_normal <- uh_dec_korig_normal %>%
+uh_dec_korig_norm_l <- uh_dec_korig_normal %>%
   pivot_longer(-DATE, names_to = "Stacija", values_to = "UNH_korig")
 
 old_norm_l <- old_dec %>%
   pivot_longer(-DATE, names_to = "Stacija", values_to = "Old_norma")
 
-ac_dec_norm_l <- ac_dec_normal %>%
-  pivot_longer(-DATE, names_to = "Stacija", values_to = "ACMANT")
+# ac_dec_norm_l <- ac_dec_normal %>%
+#   pivot_longer(-DATE, names_to = "Stacija", values_to = "ACMANT")
 
 ac_dec_korig_norm_l <- ac_dec_korig_normal %>%
   pivot_longer(-DATE, names_to = "Stacija", values_to = "ACMANT_korig")
 
-clim_dec_norm_l <- clim_dec_normal %>%
-  pivot_longer(-DATE, names_to = "Stacija", values_to = "CLIMATOL")
+# clim_dec_norm_l <- clim_dec_normal %>%
+#   pivot_longer(-DATE, names_to = "Stacija", values_to = "CLIMATOL")
 
 clim_dec_korig_norm_l <- clim_dec_korig_normal %>%
   pivot_longer(-DATE, names_to = "Stacija", values_to = "CLIMATOL_korig")
 
-dec_norm_l <- inner_join(uh_dec_norm_l, uh_dec_korig_normal) %>%
-  inner_join(old_norm_l) %>%
-  inner_join(ac_dec_norm_l) %>%
-  inner_join(ac_dec_korig_norm_l) %>%
-  inner_join(clim_dec_norm_l) %>%
-  inner_join(clim_dec_korig_norm_l) 
+# dec_norm_l <- inner_join(uh_dec_norm_l, uh_dec_korig_normal) %>%
+#   inner_join(old_norm_l) %>%
+#   inner_join(ac_dec_norm_l) %>%
+#   inner_join(ac_dec_korig_norm_l) %>%
+#   inner_join(clim_dec_norm_l) %>%
+#   inner_join(clim_dec_korig_norm_l) 
+
+dec_norm_l <- full_join(uh_dec_korig_norm_l, old_norm_l) %>%
+  full_join(ac_dec_korig_norm_l) %>%
+  full_join(clim_dec_korig_norm_l) 
+
 
 dec_norm_l_starpibas <- dec_norm_l %>%
   transmute(DATE = DATE,
             Stacija = Stacija,
-            UNH = UNH - Old_norma,
+            # UNH = UNH - Old_norma,
             UNH_cor = UNH_korig - Old_norma,
-            ACMANT = ACMANT - Old_norma,
+            # ACMANT = ACMANT - Old_norma,
             ACMANT_cor = ACMANT_korig - Old_norma,
-            CLIMATOL = CLIMATOL - Old_norma,
+            # CLIMATOL = CLIMATOL - Old_norma,
             CLIMATOL_cor = CLIMATOL_korig - Old_norma)
 
 
@@ -152,7 +158,36 @@ dec_norm_l <- dec_norm_l %>%
 dec_norm_l_starpibas <- dec_norm_l_starpibas %>%
   pivot_longer(-c(DATE, Stacija), names_to = "Metode", values_to = "Val")
 
+dec_norm_l <- dec_norm_l %>%
+  filter(Stacija %in% c("RIAI99PA", "RIAL99MS", "RIBA99PA", "RIDAGDA","RIDM99MS", "RIDO99MS",
+                        "RIGASLU", "RIGU99MS", "RIJE99PA", "RIKO99PA", "RILP99PA", "RIMADONA",
+                        "RIME99MS", "RIPA99PA", "RIPR99PA", "RIREZEKN", "RIRU99PA", "RISA99PA",
+                        "RISE99MS", "RISI99PA", "RIST99PA", "RIVE99PA", "RIZI99PA", "RIZO99MS", 
+                        "RUCAVA"))
 
+dec_norm_l_starpibas <- dec_norm_l_starpibas %>%
+  filter(Stacija %in% c("RIAI99PA", "RIAL99MS", "RIBA99PA", "RIDAGDA","RIDM99MS", "RIDO99MS",
+                       "RIGASLU", "RIGU99MS", "RIJE99PA", "RIKO99PA", "RILP99PA", "RIMADONA",
+                       "RIME99MS", "RIPA99PA", "RIPR99PA", "RIREZEKN", "RIRU99PA", "RISA99PA",
+                       "RISE99MS", "RISI99PA", "RIST99PA", "RIVE99PA", "RIZI99PA", "RIZO99MS", 
+                       "RUCAVA"))
+
+
+# Normu salīdzinājumu grafiki ---------------------------------------------
+
+dec_norm_l_starpibas %>%
+  filter(Stacija == "RIPR99PA") %>%
+  # filter(Stacija %in% c("RIZI99PA", "RIREZEKN", "RISI99PA", "RIDM99MS", "RIPR99PA")) %>%
+  ggplot() +
+  geom_point(aes(DATE, Val, col = Metode), size = 3) +
+  geom_line(aes(DATE, Val, col = Metode, group = Metode)) + 
+  facet_wrap(~Stacija)
+
+mutate(Dekade = str_sub(DATE, 4, 5),
+       Menesis = str_sub(DATE, 1,2))
+Dekade = ifelse(Dekade == 01, 10, ifelse(Dekade == 02, 20, 28))
+
+  
 # Ielādē telpiskos parametrus ---------------------------------------------
 izskirtspeja <- "1x1"
 pred_param =  "temperatura"
@@ -203,7 +238,7 @@ for (j in seq_along(dekades)) {
   dec_norm_st <- dec_norm_l %>%
     filter(DATE == dekades[j]) %>%
     left_join(stacijas_st, by = c("Stacija" = "GH_ID")) %>% 
-    select(DATE, Stacija, Metode, h = ELEVATION, cont = Temperatura_kontinentalitate, 
+    dplyr::select(DATE, Stacija, Metode, h = ELEVATION, cont = Temperatura_kontinentalitate, 
            x = X, y = Y, t = Val, geom)
   
   # Viena metode at a time
@@ -239,10 +274,10 @@ for (j in seq_along(dekades)) {
   inter_data <- met_list[[1]] %>%
     inner_join(met_list[[2]]) %>%
     inner_join(met_list[[3]]) %>%
-    inner_join(met_list[[4]]) %>%
-    inner_join(met_list[[5]]) %>%
-    inner_join(met_list[[6]]) %>%
-    inner_join(met_list[[7]])
+    inner_join(met_list[[4]])
+    # inner_join(met_list[[5]]) %>%
+    # inner_join(met_list[[6]]) %>%
+    # inner_join(met_list[[7]])
   
   inter_data <- inter_data %>%
     pivot_longer(-c(X, Y), names_to = "Metode", values_to = "Val")
@@ -275,7 +310,7 @@ for (j in seq_along(dekades)) {
   dec_norm_st <- dec_norm_l_starpibas %>%
     filter(DATE == dekades[j]) %>%
     left_join(stacijas_st, by = c("Stacija" = "GH_ID")) %>% 
-    select(DATE, Stacija, Metode, h = ELEVATION, cont = Temperatura_kontinentalitate, 
+    dplyr::select(DATE, Stacija, Metode, h = ELEVATION, cont = Temperatura_kontinentalitate, 
            x = X, y = Y, t = Val, geom)
   
   # Viena metode at a time
@@ -310,10 +345,10 @@ for (j in seq_along(dekades)) {
   
   inter_data <- met_list[[1]] %>%
     inner_join(met_list[[2]]) %>%
-    inner_join(met_list[[3]]) %>%
-    inner_join(met_list[[4]]) %>%
-    inner_join(met_list[[5]]) %>%
-    inner_join(met_list[[6]])
+    inner_join(met_list[[3]])
+    # inner_join(met_list[[4]]) %>%
+    # inner_join(met_list[[5]]) %>%
+    # inner_join(met_list[[6]])
   
   inter_data <- inter_data %>%
     pivot_longer(-c(X, Y), names_to = "Metode", values_to = "Val")
