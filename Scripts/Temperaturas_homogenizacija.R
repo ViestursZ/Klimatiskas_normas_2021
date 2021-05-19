@@ -118,7 +118,13 @@ korig_dati <- korig_dati %>%
   filter(!Stacija == "RUCAVA") %>%
   bind_rows(RUCAVA_korig)
 
+# Izņem Dagdu -------------------------------------------------------------
+
+korig_dati <- korig_dati %>%
+  filter(Stacija != "RIDAGDA")
+
 # Aprēķina diennakts datus ------------------------------------------------
+
 
 ## PIESKAITA ZIEMAS LAIKU
 temp_d <- temp_dati %>%
@@ -201,14 +207,18 @@ korig_temp_d <- korig_temp_d %>%
   left_join(iztr_df, .,) %>%
   gather(Stacija, Merijums, -Datums) 
 
+ 
 data_stacs <- data_stacs[!data_stacs %in% c("RIAS99PA", "RIRE99MS", "DAGDA")]
-korig_stacs <- korig_stacs[!korig_stacs %in% c("RIAS99PA")]
+korig_stacs <- korig_stacs[!korig_stacs %in% c("RIAS99PA", "RIDAGDA")]
 
-temp_d %>%
-  write_csv("Dati/MeanT_daily.csv")
 
-korig_temp_d %>%
-  write_csv("Dati/MeanT_daily_korig.csv")
+# Ieraksta jaunus csv failus ----------------------------------------------
+
+# temp_d %>%
+#   write_csv("Dati/MeanT_daily.csv")
+# 
+# korig_temp_d %>%
+#   write_csv("Dati/MeanT_daily_korig.csv")
 
 
 
