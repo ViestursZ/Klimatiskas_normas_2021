@@ -43,20 +43,20 @@ korig_temp_d_spread <- korig_temp_d %>%
 
 
 # Spread the data between data frames
-temp_d_spr_st <- purrr::map(data_stacs, function(x) {filter(temp_d_spread, Stacija == x)})
-
-temp_d_spr_st <- temp_d_spr_st %>%
-  purrr::map(~select(.x, -Stacija))
-
-names(temp_d_spr_st) <- data_stacs
-
-for (i in seq_along(temp_d_spr_st)) {
-  fname <- paste0("AvgTn", str_replace_all(format(i, width = 4), " ", "0"),
-                  "d.txt")
-  write_lines(data_stacs[i], paste0("Dati/ACMANT_format/", fname))
-  write_delim(temp_d_spr_st[[i]], paste0("Dati/ACMANT_format/", fname),
-              delim = " ", append = T, col_names = F)
-}
+# temp_d_spr_st <- purrr::map(data_stacs, function(x) {filter(temp_d_spread, Stacija == x)})
+# 
+# temp_d_spr_st <- temp_d_spr_st %>%
+#   purrr::map(~select(.x, -Stacija))
+# 
+# names(temp_d_spr_st) <- data_stacs
+# 
+# for (i in seq_along(temp_d_spr_st)) {
+#   fname <- paste0("AvgTn", str_replace_all(format(i, width = 4), " ", "0"),
+#                   "d.txt")
+#   write_lines(data_stacs[i], paste0("Dati/ACMANT_format/", fname))
+#   write_delim(temp_d_spr_st[[i]], paste0("Dati/ACMANT_format/", fname),
+#               delim = " ", append = T, col_names = F)
+# }
 
 # Spread the corrected data between data frames
 korig_temp_d_spr_st <- purrr::map(korig_stacs, function(x) {filter(korig_temp_d_spread, Stacija == x)})

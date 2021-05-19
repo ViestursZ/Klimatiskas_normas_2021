@@ -4,6 +4,7 @@ library(tidyverse)
 library(lubridate)
 library(magrittr)
 
+ACFileloc <- "Dati/ACMANT_homogenized_data/MeanT/Corrected/"
 
 # Ielādē neapstrādātos temperatūras ACMANT homogenizētus datus ------------
 
@@ -19,9 +20,9 @@ library(magrittr)
 
 
 # Ielādē apstrādātos temperatūras ACMANT homogenizētus datus --------------
-ACMANT_kor_files <- list.files("Dati/ACMANT_homogenized_data/MeanT/Corrected/", pattern = "v.txt$", full.names = T)
-ACMANT_kor_reliabilityf <- list.files("Dati/ACMANT_homogenized_data/MeanT/Corrected/", pattern = "i.txt$")
-ACMANT_breaksf <- "Dati/ACMANT_homogenized_data/MeanT/Corrected/AvgTn_breaks.txt"
+ACMANT_kor_files <- list.files(ACFileloc, pattern = "v.txt$", full.names = T)
+ACMANT_kor_reliabilityf <- list.files(ACFileloc, pattern = "i.txt$")
+ACMANT_breaksf <- paste0(ACFileloc, "AvgTn_breaks.txt")
 
 ACMANT_kor_data <- purrr::map(ACMANT_kor_files, read_table, skip = 1, col_names = F, skip_empty_rows = F)
 ACMANT_kor_stations <- purrr::map_chr(ACMANT_kor_files, read_lines, n_max = 1)

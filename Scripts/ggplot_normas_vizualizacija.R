@@ -7,6 +7,7 @@ library(tidyverse)
 
 Sys.setlocale("LC_ALL", "latvian_Latvia.1257")
 
+Graph_loc <- "./Grafiki/Homog_normu_salidzinajums/Mean_T" # Grafiku lokācija
 
 # Funkcijas ---------------------------------------------------------------
 
@@ -125,14 +126,14 @@ for(i in c(1:length(stacijas))){
                                   "AC korig norma" = "#a65628",
                                   "Cl norma" = "#e41a1c",
                                   "Cl korig norma" = "#4daf4a")) +
-  ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dienas/", stac,"_dien_normas.png"))
+  ggsave(paste0(Graph_loc, "/Dienas/", stac,"_dien_normas.png"))
   
   gpplot <- ggplotly(gplot)
   htmlwidgets::saveWidget(gpplot, file = paste0(stac,"_dien_normas.html"), selfcontained = T)
 }
 
 html_files <- list.files(pattern = ".html")
-nordir <- "./Grafiki/Homog_normu_salidzinajums/Dienas"
+nordir <- paste0(Graph_loc, "/Dienas")
 old_html_files <- list.files(nordir, pattern = "html", full.names = T)
 file.remove(old_html_files)
 file.copy(html_files, nordir)
@@ -222,17 +223,17 @@ for(i in c(1:length(stacijas))){
                                  "AC korig norma" = "#a65628",
                                  "Cl norma" = "#e41a1c",
                                  "Cl korig norma" = "#4daf4a")) + 
-    ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dekades/", stac,"_dek_normas.png"))
+    ggsave(paste0(Graph_loc, "/Dekades/", stac,"_dek_normas.png"))
  
  gplot +
-   ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Dekades/", stac,"_dek_normas.png"))
+   ggsave(paste0(Graph_loc, "/Dekades/", stac,"_dek_normas.png"))
  
  gpplot <- ggplotly(gplot)
  htmlwidgets::saveWidget(gpplot, file = paste0(stac,"_dec_normas.html"), selfcontained = T)
 }
 
 html_files <- list.files(pattern = ".html")
-nordir <- "./Grafiki/Homog_normu_salidzinajums/Dekades"
+nordir <- paste0(Graph_loc, "/Dekades")
 old_html_files <- list.files(nordir, pattern = "html", full.names = T)
 file.remove(old_html_files)
 file.copy(html_files, nordir)

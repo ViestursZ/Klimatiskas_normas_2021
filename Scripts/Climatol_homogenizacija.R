@@ -19,7 +19,7 @@ temp_daily <- temp_d
 
 korig_temp_daily <- korig_temp_d # Unikālās stacijas
 
-data_stacs <- temp_daily$Stacija %>% unique()
+data_stacs <- korig_temp_d$Stacija %>% unique()
 
 # Ielādē koordinātu datus priekš CLIMATOL
 visas_stacijas <- st_read("Dati/Stacijas_sampl_LKS_25_02_2020.gpkg")
@@ -103,12 +103,12 @@ climatol_temp_cor_coords <- climatol_temp_coords %>%
 
 # Pagaidām gan stacijas nost nemet
 # Sakārto un ieraksta datus atbilstoši CLIMATOL formātam -----------------------
-write(climatol_temp_raw_daily$Merijums, "Dati/Climatol_data/LVMeanTraw_1947-2020.dat", 
-      ncolumns = 5) # Ieraksta Climatol formātā
-
-climatol_temp_raw_coords %>%
-  write.table("Dati/Climatol_data/LVMeanTraw_1947-2020.est",
-              row.names = F, col.names = F) # Ieraksta coords Climatol formātā
+# write(climatol_temp_raw_daily$Merijums, "Dati/Climatol_data/LVMeanTraw_1947-2020.dat", 
+#       ncolumns = 5) # Ieraksta Climatol formātā
+# 
+# climatol_temp_raw_coords %>%
+#   write.table("Dati/Climatol_data/LVMeanTraw_1947-2020.est",
+#               row.names = F, col.names = F) # Ieraksta coords Climatol formātā
 
 write(climatol_temp_cor_daily$Merijums, "Dati/Climatol_data/LVMeanTcor_1947-2020.dat",
       ncolumns = 5)
@@ -140,15 +140,15 @@ climatol_temp_cor_coords %>%
 setwd("./Dati/Climatol_data")
 
 # No sākuma viens exploratory analysis run
-homogen("LVMeanTcor", 1947, 2020, expl = T)
-outrename("LVMeanTcor", 1947, 2020, "expl_analysis")
+# homogen("LVMeanTcor", 1947, 2020, expl = T)
+# outrename("LVMeanTcor", 1947, 2020, "expl_analysis")
 
 
 # Mēnešu sērijas, jo dienu sērijas utterly failoja
 dd2m("LVMeanTcor", 1947, 2020)
 homogen("LVMeanTcor-m", 1947, 2020)
 homogen("LVMeanTcor", 1947, 2020, dz.max = 7, metad = T)
-outrename("LVMeanTcor", 1947, 2020, "daily_monbrks")
+outrename("LVMeanTcor", 1947, 2020, "daily_monbrks_noDAGDA")
 
 setwd("../../")
 

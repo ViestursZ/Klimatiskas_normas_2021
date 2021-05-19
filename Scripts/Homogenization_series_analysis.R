@@ -241,28 +241,27 @@ for (stac in stacs) {
 
 # Linijas_pa_gadiem -------------------------------------------------------
 
-
-ACMANT_kor_data_t %>%
-  mutate(Gads = year(Datums),
-         Gada_diena = yday(Datums)) %>%
-  group_by(Gads) %>%
-  filter(Gads >= 1991) %>%
-  filter(Stacija == "RIDM99MS") %>%
-  ggplot() + 
-  geom_smooth(aes(Gada_diena, Merijums, group = Gads, col = Gads), se = F) + 
-  scale_color_distiller(palette = "Blues", direction = 1) +
-  ggtitle("ACMANT")
-
-
-  # 
-
-korig_temp_daily %>%
-  mutate(Gads = year(DATE),
-         Gada_diena = yday(DATE)) %>%
-  group_by(Gads) %>%
-  filter(Gads >= 1991) %>%
-  filter(EG_GH_ID == "RIDM99MS") %>%
-  ggplot() + 
-  geom_smooth(aes(Gada_diena, Value, group = Gads, col = Gads), se = F) + 
-  scale_color_distiller(palette = "Blues", direction = 1) +
-  ggtitle("raw")
+# ACMANT_kor_data_t %>%
+#   mutate(Gads = year(Datums),
+#          Gada_diena = yday(Datums)) %>%
+#   group_by(Gads) %>%
+#   filter(Gads >= 1991) %>%
+#   filter(Stacija == "RIDM99MS") %>%
+#   ggplot() + 
+#   geom_smooth(aes(Gada_diena, Merijums, group = Gads, col = Gads), se = F) + 
+#   scale_color_distiller(palette = "Blues", direction = 1) +
+#   ggtitle("ACMANT")
+# 
+# 
+#   # 
+# 
+# korig_temp_daily %>%
+#   mutate(Gads = year(DATE),
+#          Gada_diena = yday(DATE)) %>%
+#   group_by(Gads) %>%
+#   filter(Gads >= 1991) %>%
+#   filter(EG_GH_ID == "RIDM99MS") %>%
+#   ggplot() + 
+#   geom_smooth(aes(Gada_diena, Value, group = Gads, col = Gads), se = F) + 
+#   scale_color_distiller(palette = "Blues", direction = 1) +
+#   ggtitle("raw")
