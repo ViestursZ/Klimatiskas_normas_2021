@@ -119,6 +119,7 @@ metadata <- read_rds("Dati/station_metadata.rds")
 
 # Datu tīrīšana -----------------------------------------------------------
 
+# Mean T
 TDRY_reg_data_cl <- TDRY_reg_data %>%
   clean_data(regular = "Y", filter_params = "AVG")
 
@@ -128,23 +129,82 @@ TDRY_unreg_data_cl <- TDRY_unreg_data %>%
 HTDRY_reg_data_cl <- HTDRY_unreg_data %>%
   clean_data(regular = "Y", filter_params = "AVG")
 
+# Min T
+ATMN_reg_data_cl <- ATMN_reg_data %>%
+  clean_data(regular = "Y", filter_params = "MIN")
+ATMN_unreg_data_cl <- ATMN_unreg_data %>%
+  clean_data(regular = "N", filter_params = "MIN")
+HATMN_reg_data_cl <- HATMN_unreg_data %>%
+  clean_data(regular = "Y", filter_params = "MIN")
+
+
+
+# Šos parametrus maina atkarībā no parametra un pārējais skript aiziet ----
+parametrs <- "Mean_T"
+term_par <- "TDRY"
+# reg_data_cl <- ATMN_reg_data_cl
+# unreg_data_cl <- ATMN_unreg_data_cl
+# h_data_cl <- HATMN_reg_data_cl
+
+reg_data_cl <- TDRY_reg_data_cl
+unreg_data_cl <- TDRY_unreg_data_cl
+h_data_cl <- HTDRY_reg_data_cl
+ 
 
 # Ekstraktē sākuma un beigu datumus katram parametram ---------------------
 # Extract start date for Hourly parameters
-Rpar_starts <- TDRY_reg_data_cl %>%
+# Mean T
+Rpar_starts <- reg_data_cl %>%
   r_starts()
-Hpar_starts <- HTDRY_reg_data_cl %>%
+Hpar_starts <- h_data_cl %>%
   H_starts()
+
 
 # Apvieno datu kopas ------------------------------------------------------
 
-unreg_data_clean <- cut_unregular_data(TDRY_unreg_data_cl, Rpar_starts)
+unreg_data_clean <- cut_unregular_data(unreg_data_cl, Rpar_starts)
 
-term_data_clean <- cut_term_data(TDRY_reg_data_cl, r_start = Rpar_starts,
+term_data_clean <- cut_term_data(reg_data_cl, r_start = Rpar_starts,
                                  h_start = Hpar_starts)
 
-hourly_data_clean <- cut_hourly_data(HTDRY_reg_data_cl, h_starts = Hpar_starts)
+hourly_data_clean <- cut_hourly_data(h_data_cl, h_starts = Hpar_starts)
 
+
+# 24 uz 8 h termiņnovērojumu fix ------------------------------------------
+# Mirklī, kad termiņnovērojumi pāriet no 24h uz 8h nepieciešams izņemt visus iztrūkumus atbilstošajā mēnesī
+
+# Stacijas
+term_data_stacijas <- unique(term_data_clean$Stacija)
+
+for (i in seq_along(term_data_stacijas)) {
+ tdat <- metadata %>%
+    filter(REGULAR == "Y" & EG_EL_ABBREVIATION == term_par) %>%
+    filter(EG_GH_ID == term_data_stacijas[i]) %>%
+    filter(TI_INTERVAL == "01:00") %>%
+    filter(BEGIN_DATE == min(BEGIN_DATE)) %>%
+    pull(BEGIN_DATE)
+
+  if (length(tdat) == 0) {
+    next()
+  } 
+  ytdat <- year(tdat)
+  mtdat <- month(tdat)
+  
+  taizviet_menesis <- term_data_clean %>%
+    filter(Stacija == term_data_stacijas[i]) %>%
+    filter(year(Datums_laiks) == ytdat) %>%
+    filter(month(Datums_laiks) == mtdat) %>%
+    filter(!is.na(Merijums))
+  
+  term_data_clean <- term_data_clean %>%
+    filter(!(Stacija == term_data_stacijas[i] & year(Datums_laiks) == ytdat & month(Datums_laiks) == mtdat))
+  
+  term_data_clean <- bind_rows(term_data_clean, taizviet_menesis)
+}
+
+term_data_clean <- term_data_clean %>% arrange(Stacija, Datums_laiks)
+
+# Apvieno datu kopas ------------------------------------------------------
 # Apvieno datu kopas ar visiem pareizajiem NA
 full_data_clean <- bind_rows(unreg_data_clean, term_data_clean, hourly_data_clean) %>%
   arrange(Stacija, Datums_laiks)
@@ -164,5 +224,6 @@ duplidata <- full_data_clean[didx2, ]
 # Kā redzams, kļūda duplikātu dēļ datos ir ļoti minimāla, tāpēc tie vienkārši ignorēti
 full_data_clean2 <- full_data_clean[!dupli_idx, ]
 
+# Ieraksta novērojumu datus vienā failā -----------------------------------
 # Write clean data
-full_data_clean %>% write_csv("Dati/Temp_dati_clean.csv")
+full_data_clean2 %>% write_csv(paste0("Dati/", parametrs, "_dati_clean.csv"))
