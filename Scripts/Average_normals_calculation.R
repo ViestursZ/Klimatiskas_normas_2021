@@ -131,6 +131,39 @@ clim_month_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 3, fja = 
 clim_year_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 4, fja = 0)
 
 
-# Grafiki -----------------------------------------------------------------
+# MINIMĀLĀS NORMAS --------------------------------------------------------
 
+# Koriģēto temperatūras datu normas ---------------------------------------
+korig_temp_daily <- korig_temp_daily %>%
+  set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+
+uh_day_korig_normal <- normas_apr(korig_temp_daily, time = 1, fja = -999)
+uh_dec_korig_normal <- normas_apr(korig_temp_daily, time = 2, fja = -999)
+uh_month_korig_normal <- normas_apr(korig_temp_daily, time = 3, fja = -999)
+uh_year_korig_normal <- normas_apr(korig_temp_daily, time = 4, fja = -999)
+
+# ACMANT koriģētas temperatūras norma -------------------------------------
+
+# ACMANT normas
+ACMANT_kor_data_trn <- ACMANT_kor_data_t %>% # No format_ACMANT.R skripta
+  set_colnames(c("EG_GH_ID", "Value", "DATE")) %>%
+  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+
+ac_day_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 1, fja = -999)
+ac_dec_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 2, fja = -999)
+ac_month_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 3, fja = -999)
+ac_year_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 4, fja = -999)
+
+# Climatol koriģētu temperatūras datu norma -------------------------------
+
+climatol_cor_homdata_trn <- climatol_cor_homdata %>%  # No Climatol_analysis.R
+  pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
+  set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+
+clim_day_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 1, fja = -999)
+clim_dec_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 2, fja = -999)
+clim_month_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 3, fja = -999)
+clim_year_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 4, fja = -999)
 
