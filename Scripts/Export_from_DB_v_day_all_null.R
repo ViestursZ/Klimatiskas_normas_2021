@@ -76,3 +76,12 @@ HATMN_unreg_data <- export_data(parameters = "HATMN")
 write_rds(HATMN_unreg_data, "Dati/ATMN_unreg_export.rds")
 
 
+# Max T -------------------------------------------------------------------
+
+ATMX_reg_data <- export_data(parameters = "ATMX")
+write_rds(ATMX_reg_data, "Dati/ATMX_reg_export.rds")
+ATMX_unreg_data <- export_data(parameters = "ATMX", regular = "N")
+write_rds(ATMX_unreg_data, "Dati/ATMX_unreg_export.rds")
+HATMX_unreg_data <- export_data(parameters = "HATMX")
+write_rds(HATMX_unreg_data, "Dati/HATMX_export.rds")
+
