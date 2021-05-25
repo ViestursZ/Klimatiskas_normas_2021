@@ -155,12 +155,25 @@ dec_norm_l_starpibas <- dec_norm_l %>%
             # CLIMATOL = CLIMATOL - Old_norma,
             CLIMATOL_cor = CLIMATOL_korig - Old_norma)
 
+dec_norm_l_starpibas_no_UNH <- dec_norm_l %>%
+  transmute(DATE = DATE,
+            Stacija = Stacija,
+            ACMANT = ACMANT_korig - UNH_korig,
+            CLIMATOL = CLIMATOL_korig - UNH_korig)
 
 dec_norm_l <- dec_norm_l %>%
   pivot_longer(-c(DATE, Stacija), names_to = "Metode", values_to = "Val")
 
 dec_norm_l_starpibas <- dec_norm_l_starpibas %>%
   pivot_longer(-c(DATE, Stacija), names_to = "Metode", values_to = "Val")
+
+dec_norm_l_starpibas_no_UNH <- dec_norm_l_starpibas_no_UNH %>%
+  pivot_longer(-c(DATE, Stacija), names_to = "Metode", values_to = "Val") %>%
+  filter(Stacija %in% c("RIAI99PA", "RIAL99MS", "RIBA99PA", "RIDAGDA","RIDM99MS", "RIDO99MS",
+                        "RIGASLU", "RIGU99MS", "RIJE99PA", "RIKO99PA", "RILP99PA", "RIMADONA",
+                        "RIME99MS", "RIPA99PA", "RIPR99PA", "RIREZEKN", "RIRU99PA", "RISA99PA",
+                        "RISE99MS", "RISI99PA", "RIST99PA", "RIVE99PA", "RIZI99PA", "RIZO99MS", 
+                        "RUCAVA"))
 
 dec_norm_l <- dec_norm_l %>%
   filter(Stacija %in% c("RIAI99PA", "RIAL99MS", "RIBA99PA", "RIDAGDA","RIDM99MS", "RIDO99MS",
@@ -188,11 +201,27 @@ for (i in seq_along(dec_norm_stacs)) {
     geom_point(aes(DATE, Val, col = Metode), size = 3) +
     geom_line(aes(DATE, Val, col = Metode, group = Metode)) + 
     ggtitle(dec_norm_stacs[i]) +
-    theme(axis.text.x = element_text(angle = 270, vjust = 0.5)) +
+    theme(axis.text.x = element_text(angle = 270, vjust = 0.5),
+          legend.position = "bottom") +
     # facet_wrap(~Stacija) +
     ggsave(paste0(Graph_loc, "/Dekades_starpibas/", dec_norm_stacs[i], "_dek_starpibas.png"))
   # dev.off()
 }
+
+for (i in seq_along(dec_norm_stacs)) {
+  dec_norm_l_starpibas_no_UNH %>%
+    filter(Stacija == dec_norm_stacs[i]) %>%
+    ggplot() +
+    geom_point(aes(DATE, Val, col = Metode), size = 3) +
+    geom_line(aes(DATE, Val, col = Metode, group = Metode)) + 
+    ggtitle(dec_norm_stacs[i]) +
+    theme(axis.text.x = element_text(angle = 270, vjust = 0.5),
+          legend.position = "bottom") +
+    # facet_wrap(~Stacija) +
+    ggsave(paste0(Graph_loc, "/Dekades_starpibas/UNH_comp_", dec_norm_stacs[i], "_dek_starpibas.png"))
+  # dev.off()
+}
+
 
 
   
@@ -375,7 +404,7 @@ for (j in seq_along(dekades)) {
     ggtitle(paste0("Jaunās gaisa temperatūras normas salīdzinājums ar veco normu, dekāde ", dekades[j])) + 
     # geom_text_repel() +
     facet_wrap(~Metode) + 
-    ggsave(paste0(Graph_loc, "/Dekades_kartes/Dekade_", dekades[j], ".png"),
+    ggsave(paste0(Graph_loc, "/Dekades_starpibas_kartes/Dekade_", dekades[j], ".png"),
            device = png(width = 1100, height = 700))
   dev.off()
 }
