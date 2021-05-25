@@ -120,14 +120,14 @@ metadata <- read_rds("Dati/station_metadata.rds")
 # Datu tīrīšana -----------------------------------------------------------
 
 # Mean T
-TDRY_reg_data_cl <- TDRY_reg_data %>%
-  clean_data(regular = "Y", filter_params = "AVG")
-
-TDRY_unreg_data_cl <- TDRY_unreg_data %>%
-  clean_data(regular = "N", filter_params = "AVG")
-
-HTDRY_reg_data_cl <- HTDRY_unreg_data %>%
-  clean_data(regular = "Y", filter_params = "AVG")
+# TDRY_reg_data_cl <- TDRY_reg_data %>%
+#   clean_data(regular = "Y", filter_params = "AVG")
+# 
+# TDRY_unreg_data_cl <- TDRY_unreg_data %>%
+#   clean_data(regular = "N", filter_params = "AVG")
+# 
+# HTDRY_reg_data_cl <- HTDRY_unreg_data %>%
+#   clean_data(regular = "Y", filter_params = "AVG")
 
 # Min T
 ATMN_reg_data_cl <- ATMN_reg_data %>%
@@ -140,16 +140,17 @@ HATMN_reg_data_cl <- HATMN_unreg_data %>%
 
 
 # Šos parametrus maina atkarībā no parametra un pārējais skript aiziet ----
-parametrs <- "Mean_T"
-term_par <- "TDRY"
-# reg_data_cl <- ATMN_reg_data_cl
-# unreg_data_cl <- ATMN_unreg_data_cl
-# h_data_cl <- HATMN_reg_data_cl
+parametrs <- "Min_T"
+term_par <- "ATMN"
 
-reg_data_cl <- TDRY_reg_data_cl
-unreg_data_cl <- TDRY_unreg_data_cl
-h_data_cl <- HTDRY_reg_data_cl
- 
+# reg_data_cl <- TDRY_reg_data_cl
+# unreg_data_cl <- TDRY_unreg_data_cl
+# h_data_cl <- HTDRY_reg_data_cl
+
+reg_data_cl <- ATMN_reg_data_cl
+unreg_data_cl <- ATMN_unreg_data_cl
+h_data_cl <- HATMN_reg_data_cl
+
 
 # Ekstraktē sākuma un beigu datumus katram parametram ---------------------
 # Extract start date for Hourly parameters
@@ -175,9 +176,10 @@ hourly_data_clean <- cut_hourly_data(h_data_cl, h_starts = Hpar_starts)
 
 # Stacijas
 term_data_stacijas <- unique(term_data_clean$Stacija)
+metadata <- read_rds("Dati/station_metadata.rds")
 
 for (i in seq_along(term_data_stacijas)) {
- tdat <- metadata %>%
+  tdat <- metadata %>%
     filter(REGULAR == "Y" & EG_EL_ABBREVIATION == term_par) %>%
     filter(EG_GH_ID == term_data_stacijas[i]) %>%
     filter(TI_INTERVAL == "01:00") %>%

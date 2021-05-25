@@ -217,8 +217,8 @@ korig_stacs <- korig_stacs[!korig_stacs %in% c("RIAS99PA", "RIDAGDA")]
 # temp_d %>%
 #   write_csv("Dati/MeanT_daily.csv")
 # 
-# korig_temp_d %>%
-#   write_csv("Dati/MeanT_daily_korig.csv")
+korig_temp_d %>%
+  write_csv("Dati/MeanT_daily_korig.csv")
 
 
 
