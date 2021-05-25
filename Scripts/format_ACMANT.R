@@ -5,6 +5,12 @@ library(tidyverse)
 library(lubridate)
 library(magrittr)
 
+
+# Maināmie parametri ------------------------------------------------------
+
+parametrs <- "Min_T"
+parametrs_acmant <- "MinTm"
+
 # Funkcijas ---------------------------------------------------------------
 
 source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/aggregation_funcs.r")
@@ -58,6 +64,20 @@ korig_temp_d_spread <- korig_temp_d %>%
 #               delim = " ", append = T, col_names = F)
 # }
 
+
+
+# Atlasa precīzās stacijas, kuras homogenizēt --------------------------
+homog_stacijas <- c("RIAI99PA", "RIAL99MS", "RIBA99PA", "RIDAGDA","RIDM99MS", "RIDO99MS",
+  "RIGASLU", "RIGU99MS", "RIJE99PA", "RIKO99PA", "RILP99PA", "RIMADONA",
+  "RIME99MS", "RIPA99PA", "RIPR99PA", "RIREZEKN", "RIRU99PA", "RISA99PA",
+  "RISE99MS", "RISI99PA", "RIST99PA", "RIVE99PA", "RIZI99PA", "RIZO99MS", 
+  "RUCAVA")
+
+korig_stacs <- homog_stacijas
+data_stacs <- homog_stacijas
+
+
+# Ieraksta ACMANT datus ---------------------------------------------------
 # Spread the corrected data between data frames
 korig_temp_d_spr_st <- purrr::map(korig_stacs, function(x) {filter(korig_temp_d_spread, Stacija == x)})
 
@@ -67,7 +87,7 @@ korig_temp_d_spr_st <- korig_temp_d_spr_st %>%
 names(korig_temp_d_spr_st) <- korig_stacs
 
 for (i in seq_along(korig_temp_d_spr_st)) {
-  fname <- paste0("AvgTk", str_replace_all(format(i, width = 4), " ", "0"),
+  fname <- paste0(parametrs_acmant, str_replace_all(format(i, width = 4), " ", "0"),
                   "d.txt")
   write_lines(korig_stacs[i], paste0("Dati/ACMANT_format/", fname))
   write_delim(korig_temp_d_spr_st[[i]], paste0("Dati/ACMANT_format/", fname),

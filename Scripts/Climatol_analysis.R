@@ -21,6 +21,13 @@ compare_series <- function(real_series, comp_series) {
 }
 
 
+# Mainīgie ----------------------------------------------------------------
+
+parameter <- "Mean_T"
+parameter_climatol <- "MeanT"
+dataset_nm <- paste0("LV", parameter_climatol, "cor")
+
+
 
 # Homogenization files ----------------------------------------------------
 
@@ -108,13 +115,12 @@ compare_series <- function(real_series, comp_series) {
 # Koriģētās temperatūras CLIMATOL homogenizēti dati --------------------------
 
 # Ielādē climatol datus
-climatol_korig_daily <- load("Dati/Climatol_data/LVMeanTcor-daily_monbrks_1947-2020.rda")
+climatol_korig_daily <- load(paste0("Dati/Climatol_data/", dataset_nm, "-daily_monbrks_noDAGDA_1947-2020.rda"))
 vals <- list("ini" = ini, "nd" = nd, "ndec" = ndec, "ne" = ne, "nei" = nei, 
              "nm" = nm, "std" = std, "x" = x)
 data <- list("dah" = dah, "dat" = dat, "est.c" = est.c)
 homdata <- list("vals" = vals, "data" = data)
 
-data
 # Sakārto datu kopas
 climatol_temp_cor_daily_s <- climatol_temp_cor_daily %>% # Dati no Climatol_homogenizacija.R skripta
   spread(Stacija, Merijums)
@@ -142,17 +148,32 @@ abs_errors <- vector()
 
 
 for (i in seq_along(datnames)) {
+  # i <- 1
   series_name <- datnames[i]
   real_ser <- climatol_temp_cor_daily_s %>%
     dplyr::select(matches(series_name)) %>%
     purrr::map(extract_last, 100)
   
+  condition_na <- sum(is.na(real_ser[[series_name]])) == 100
+  if (condition_na) { # Vai visi ieraksti ir NA?
+    real_ser[[series_name]] <- climatol_temp_cor_daily_s[[series_name]]
+    tail_idx <- tail(which(!is.na(real_ser[[series_name]])), 100)
+    real_ser[[series_name]] <- real_ser[[series_name]][tail_idx]
+    
+  }
+  
   hom_series <- dath %>%
     dplyr::select(matches(series_name))
   
+  if (condition_na) {
   comp_ser <- hom_series %>%
-    purrr::map(extract_last, 100)
+      purrr::map(function(x) {x[tail_idx]})
+  } else {
+    comp_ser <- hom_series %>%
+      purrr::map(extract_last, 100)
   
+  }
+    
   errors <- compare_series(real_ser, comp_ser)
   real_idx <- which.min(errors)
   
@@ -169,4 +190,6 @@ homogenizetie_dati <- bind_cols(series) %>%
   dplyr::select(Datums, everything())
 
 climatol_cor_homdata <- homogenizetie_dati
-climatol_cor_homdata
+
+climatol_cor_homdata %>%
+  write_excel_csv2(paste0("CLIMATOL_homog_", parameter, ".csv"))

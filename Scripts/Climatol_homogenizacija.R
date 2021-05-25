@@ -12,9 +12,15 @@ library(sf)
 source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/Recode_stations.R",
        encoding = "UTF-8")
 
+
+# Mainīgie ----------------------------------------------------------------
+
+parameter_climatol <- "MinT"
+dataset_nm <- paste0("LV", parameter_climatol, "cor")
+
+
 # Sakārto datus -----------------------------------------------------------
 
-# temp_daily <- read_csv("Dati/MeanT_daily.csv")
 temp_daily <- temp_d
 
 korig_temp_daily <- korig_temp_d # Unikālās stacijas
@@ -109,11 +115,13 @@ climatol_temp_cor_coords <- climatol_temp_coords %>%
 # climatol_temp_raw_coords %>%
 #   write.table("Dati/Climatol_data/LVMeanTraw_1947-2020.est",
 #               row.names = F, col.names = F) # Ieraksta coords Climatol formātā
-
-write(climatol_temp_cor_daily$Merijums, "Dati/Climatol_data/LVMeanTcor_1947-2020.dat",
+write(climatol_temp_cor_daily$Merijums, paste0("Dati/Climatol_data/", 
+                                               dataset_nm, "_1947-2020.dat"),
       ncolumns = 5)
+
 climatol_temp_cor_coords %>%
-  write.table("Dati/Climatol_data/LVMeanTcor_1947-2020.est", row.names = F, col.names = F)
+  write.table(paste0("Dati/Climatol_data/", dataset_nm, "_1947-2020.est"), 
+              row.names = F, col.names = F)
 
 
 # Climatol raw datu homogenizācija -------------------------------------------------
@@ -140,15 +148,15 @@ climatol_temp_cor_coords %>%
 setwd("./Dati/Climatol_data")
 
 # No sākuma viens exploratory analysis run
-# homogen("LVMeanTcor", 1947, 2020, expl = T)
-# outrename("LVMeanTcor", 1947, 2020, "expl_analysis")
+# homogen(dataset_nm, 1947, 2020, expl = T)
+# outrename(dataset_nm, 1947, 2020, "expl_analysis")
 
 
 # Mēnešu sērijas, jo dienu sērijas utterly failoja
-dd2m("LVMeanTcor", 1947, 2020)
-homogen("LVMeanTcor-m", 1947, 2020)
-homogen("LVMeanTcor", 1947, 2020, dz.max = 7, metad = T)
-outrename("LVMeanTcor", 1947, 2020, "daily_monbrks_noDAGDA")
+dd2m(dataset_nm, 1947, 2020)
+homogen(paste0(dataset_nm, "-m"), 1947, 2020)
+homogen(dataset_nm, 1947, 2020, dz.max = 7, metad = T)
+outrename(dataset_nm, 1947, 2020, "daily_monbrks_noDAGDA")
 
 setwd("../../")
 

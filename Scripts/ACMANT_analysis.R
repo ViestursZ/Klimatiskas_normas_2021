@@ -4,6 +4,10 @@ library(tidyverse)
 library(lubridate)
 library(magrittr)
 
+
+# Mainīgie ----------------------------------------------------------------
+
+parameter <- "Mean_T"
 ACFileloc <- "Dati/ACMANT_homogenized_data/MeanT/Corrected/"
 
 # Ielādē neapstrādātos temperatūras ACMANT homogenizētus datus ------------
@@ -55,3 +59,5 @@ ACMANT_kor_data_t <- ACMANT_kor_data %>%
   select(-Gads, -Menesis, -Diena)
 
 
+ACMANT_kor_data_t %>%
+  write_excel_csv2(paste0("ACMANT_homog_", parameter, ".csv"))
