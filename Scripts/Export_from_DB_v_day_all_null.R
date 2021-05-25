@@ -25,9 +25,54 @@ export_data <- function(parameters, stacijas = NA, regular = "Y") {
   return(data)
 }
 
+
+# Export metadata ---------------------------------------------------------
+
+con <- source("P:/KMN/Kodi/Clidata_connection.r")
+
+query <- paste0(
+  "select * from st_observation
+  order by eg_gh_id")
+
+metadata <- sqlQuery(con[[1]], query,
+                     stringsAsFactors = F)
+
+write_rds(metadata, "Dati/station_metadata.rds")
+odbcClose(con[[1]])
+
+#### Geography data ####
+con <- source("P:/KMN/Kodi/Clidata_connection.r")
+
+query <- paste0(
+  "select * from geography
+  order by gh_id")
+
+geography_data <- sqlQuery(con[[1]], query,
+                           stringsAsFactors = F)
+
+write_rds(geography_data, "Dati/geog_data.rds")
+odbcClose(con[[1]])
+
+
+
+# Mean T ------------------------------------------------------------------
+
 TDRY_reg_data <- export_data(parameters = "TDRY")
 write_rds(TDRY_reg_data, "Dati/TDRY_reg_export.rds")
 TDRY_unreg_data <- export_data(parameters = "TDRY", regular = "N")
 write_rds(TDRY_unreg_data, "Dati/TDRY_unreg_export.rds")
 HTDRY_unreg_data <- export_data(parameters = "HTDRY")
 write_rds(TDRY_unreg_data, "Dati/HTDRY_unreg_export.rds")
+
+
+
+# Minimālā temperatūra ----------------------------------------------------
+
+ATMN_reg_data <- export_data(parameters = "ATMN")
+write_rds(ATMN_reg_data, "Dati/ATMN_reg_export.rds")
+ATMN_unreg_data <- export_data(parameters = "ATMN", regular = "N")
+write_rds(ATMN_unreg_data, "Dati/ATMN_unreg_export.rds")
+HATMN_unreg_data <- export_data(parameters = "HATMN")
+write_rds(HATMN_unreg_data, "Dati/ATMN_unreg_export.rds")
+
+
