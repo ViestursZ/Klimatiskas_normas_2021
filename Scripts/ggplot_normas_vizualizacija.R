@@ -7,7 +7,11 @@ library(tidyverse)
 
 Sys.setlocale("LC_ALL", "latvian_Latvia.1257")
 
-Graph_loc <- "./Grafiki/Homog_normu_salidzinajums/Mean_T" # Grafiku lokācija
+
+# Plotting parameters -----------------------------------------------------
+
+plotparam <- "Vidējā gaisa temperatūra, °C"
+Graph_loc <- "./Grafiki/Homog_normu_salidzinajums/Mean_T" # Grafiku lokācijai
 
 # Funkcijas ---------------------------------------------------------------
 
@@ -38,6 +42,14 @@ old_dec <- old_dec %>%
   dplyr::select(-MON) %>%
   rename(RIREZEKN = RIRE99MS)
 
+# old_dec <- read_csv2("Dati/Minimala_gaisa_temperatura_dek.csv")
+# old_dec <- old_dec %>%
+#   mutate(DATE = str_c(str_replace(format(old_dec$MON), " ", "0"),
+#                       paste0("0", format(old_dec$DATE)),
+#                       sep = "-")) %>%
+#   dplyr::select(-MON) %>%
+#   rename(RIREZEKN = RIRE99MS)
+
 old_day <- read_csv2("Dati/old_Videja_gaisa_temperatura_day.csv")
 old_day <- old_day %>%
   mutate(DATE = str_c(MON, DATE, sep = "-")) %>%
@@ -51,7 +63,7 @@ old_mon <- old_mon %>%
 
 old_mon <- old_mon %>%
   mutate(DATE = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"))
-                  
+                 
 
   
 #### Diennakts plot ####
@@ -106,7 +118,7 @@ for(i in c(1:length(stacijas))){
     geom_hline(yintercept = c(0,5,10,15,20), color = "gray", size=0.5) +
     # geom_line(aes(DATE2, y = norma1, group = 1, color = "UH norma"), size = 1) +
     geom_line(aes(DATE2, y = norma2, group = 1, color = "UH korig norma"), size = 1) +
-    geom_line(aes(DATE2, y = norma3, group = 1, color = "81-10 norma"), size = 1) +
+    # geom_line(aes(DATE2, y = norma3, group = 1, color = "81-10 norma"), size = 1) +
     # geom_line(aes(DATE2, y = norma4, group = 1, color = "AC norma"), size = 1) + 
     geom_line(aes(DATE2, y = norma5, group = 1, color = "AC korig norma"), size = 1) + 
     # geom_line(aes(DATE2, y = norma6, group = 1, color = "Cl norma"), size = 1) +
@@ -115,9 +127,9 @@ for(i in c(1:length(stacijas))){
     scale_x_datetime(breaks = date_breaks(width = "1 month"), 
                      labels = date_format("%1.%m.")) +
     xlab("Datums") +
-    ylab("Vidējā gaisa temperatūra, °C") +
+    ylab(plotparam) +
     labs(colour="") +
-    ggtitle(paste0(stac, " diennakts temperatūras normas")) +
+    ggtitle(paste0(stac, " ", ", norma")) +
     theme(legend.position = "top") +
     scale_color_manual(values = c("UH norma" = "#377eb8",
                                   "UH korig norma" = "#984ea3",
@@ -212,9 +224,9 @@ for(i in c(1:length(stacijas))){
     scale_x_datetime(breaks = date_breaks(width = "1 month"), 
                      labels = date_format("%1.%m.")) +
     xlab("Datums") +
-    ylab("Vidējā gaisa temperatūra, °C") +
-    labs(colour="")+
-    ggtitle(paste0(stac, " dekades temperatūras normas")) + 
+    ylab(plotparam) +
+    labs(colour="") +
+    ggtitle(paste0(stac, " ", ", norma")) +
     theme(legend.position = "top") +
     scale_color_manual(values = c("UH norma" = "#377eb8",
                                  "UH korig norma" = "#984ea3",
