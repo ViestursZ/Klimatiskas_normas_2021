@@ -5,34 +5,31 @@ library(plotly)
 library(lubridate)
 
 
+# Plotting variables ------------------------------------------------------
+
+Graph_loc <- "./Grafiki/Homog_normu_salidzinajums/Mean_T/Laikrindas"
+
 # Ielādē gaisa temperatūras koeficientus ----------------------------------
 
 
-# Ielādē time-series ------------------------------------------------------
+# Ielādē datus ------------------------------------------------------------
+# Dati apstrādāti Normals_calculation.R skriptā
+# Koriģētie dati
+korig_temp_daily <- read_csv("Dati/MeanT_daily_korig.csv", col_types = c("Dcn"))
 
-temp_daily <- read_csv("Dati/MeanT_daily.csv")
+korig_temp_daily <- korig_temp_daily %>%
+  set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
 
-# Parastās normas
-temp_daily <- temp_daily %>%
-  mutate(Merijums = ifelse(Merijums == -999.9, NA, Merijums))
-
-# Pārsauc kolonnas, lai normāli rēķinātos normas
-temp_daily <- temp_daily %>%
-  set_colnames(c("DATE", "EG_GH_ID", "Value"))
-
-ACMANT_data_trn <- ACMANT_data_t %>% # No format_ACMANT.R skripta
-  set_colnames(c("EG_GH_ID", "Value", "DATE"))
-
-climatol_homdata_trn <- climatol_homdata %>%  # No Climatol_analysis.R
-  pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
-  set_colnames(c("DATE", "EG_GH_ID", "Value"))
-
+# Koriģētie dati no normām
+ACMANT_kor_data_trn 
+climatol_cor_homdata_trn 
 
 
 
 # Ielādē staciju metadatus ------------------------------------------------
 # Aktuālās stacijas
-homog_stacijas <- unique(temp_daily$EG_GH_ID)
+homog_stacijas <- unique(korig_temp_daily$EG_GH_ID)
 
 metadata <- read_rds("Dati/station_metadata.rds")
 
@@ -43,7 +40,7 @@ metadata <- metadata %>%
          END_DATE = force_tz(END_DATE, "UTC"))
 
 metadata_filter <- metadata %>%
-  filter(year(BEGIN_DATE) >= 1947) %>%
+  filter(year(BEGIN_DATE) >= 1991) %>%
   filter(EG_GH_ID %in% homog_stacijas)
 
 # Noņemu duplikātus
@@ -76,9 +73,9 @@ geog_data <- geog_data %>%
 
 # Pievieno klāt manuāli vēl zināmos pārvietošanas eventus (no vēja homogenizācijas)
 
-stacs <- c("RIBA99PA", "RIDM99MS", "RIJE99PA", "RIDM99MS", "RIAS99PA", "RIAS99PA")
+stacs <- c("RIBA99PA", "RIDM99MS", "RIJE99PA", "RIDM99MS", "RIAS99PA")
 dates <- c(ymd("2016-02-24"), ymd("2016-12-08"), ymd("2016-08-22"), 
-           ymd("1990-01-01"), ymd("1984-01-01"), ymd("1997-01-01"))
+           ymd("1990-01-01"), ymd("1997-01-01"))
 
 add_geog_dates <- data.frame(GH_ID = stacs, BEGIN_DATE = dates)
 
@@ -120,22 +117,23 @@ metadata_filter <- metadata_filter %>%
 
 
 # Plotly graphs -----------------------------------------------------------
-
-temp_daily <- temp_daily %>%
+korig_temp_daily <- korig_temp_daily %>%
   rename(UNH = Value)
 
 ACMANT_daily <- ACMANT_data_trn %>%
   rename(ACMANT = Value)
 
-Clim_daily <- climatol_homdata_trn %>%
+Clim_daily <- climatol_cor_homdata_trn %>%
   rename(CLIMATOL = Value)
 
-tdata_join <- left_join(temp_daily, ACMANT_daily) %>%
+tdata_join <- left_join(korig_temp_daily, ACMANT_daily) %>%
   left_join(Clim_daily)
 
 tdata_join <- tdata_join %>%
-  filter(year(DATE) >= 1947 & year(DATE) <= 2020)
+  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
 
+
+# Monthly laikrindas
 stat_monthly <- tdata_join %>%
   mutate(Gads = year(DATE),
          Menesis = month(DATE),
@@ -164,11 +162,12 @@ for (stac in stacs) {
     ggplot(aes(Datums, Vertiba, col = Parametrs)) +
     ggtitle(stac) +
     geom_line()
+    # ggsave(paste0(Graph_loc, "/Monthly/", stac, "_MeanTmon.png"))
   
   if (nrow(metalines > 0)) {
     mong <- mong + 
-      geom_vline(data = metalines, aes(xintercept = Datums), linetype = "longdash", col = "dark green", size = 1) 
-    # ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Laikrindas/Monthly", stac, "_MeanTmon.png"))
+      geom_vline(data = metalines, aes(xintercept = Datums), linetype = "longdash", col = "dark green", size = 1)
+      # ggsave(paste0(Graph_loc, "/Monthly/", stac, "_MeanTmon.png"))
   }
   mongp <- ggplotly(mong)
   if (nrow(metalines > 0)) {
@@ -181,9 +180,19 @@ for (stac in stacs) {
     }  
   }
     htmlwidgets::saveWidget(mongp, paste0(stac, "_MeanTmon.html"), selfcontained = T)
-  mong + ggsave(paste0(stac, "_MeanTmon.png"))
+  mong + ggsave(paste0(Graph_loc, "/Monthly/", stac, "_MeanTmon.png"))
 }
 
+html_files <- list.files(pattern = ".html")
+nordir <- paste0(Graph_loc, "/Monthly")
+old_html_files <- list.files(nordir, pattern = "html", full.names = T)
+file.remove(old_html_files)
+file.copy(html_files, nordir)
+file.remove(html_files)
+
+
+
+# Yearly laikrindas
 stat_yearly <- tdata_join %>%
   mutate(Gads = year(DATE),
          Menesis = month(DATE),
@@ -194,8 +203,8 @@ stat_yearly <- tdata_join %>%
             CLIMATOL = mean(CLIMATOL, na.rm = F)) %>%
   mutate(Datums = ymd(str_c(Gads, "01", "01", sep = "-")))
 
-stacs <- unique(stat_monthly$EG_GH_ID)
 
+stacs <- unique(stat_monthly$EG_GH_ID)
 for (stac in stacs) {
   # stac <- "AIZPUTE"
   metalines <- metadata_filter %>%
@@ -213,13 +222,13 @@ for (stac in stacs) {
     pivot_longer(c(UNH, ACMANT, CLIMATOL), names_to = "Parametrs", values_to = "Vertiba") %>%
     ggplot(aes(Datums, Vertiba, col = Parametrs)) +
     ggtitle(stac) +
-    geom_line()
-    # ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Laikrindas/Yearly/", stac, "_MeanTyear.png"))
+    geom_line() 
+    # ggsave(paste0(Graph_loc, "/Yearly/", stac, "_MeanTyear.png"))
   
   if (nrow(metalines > 0)) {
     yg <- yg + 
-      geom_vline(data = metalines, aes(xintercept = Datums), linetype = "longdash", col = "dark green", size = 1) 
-    # ggsave(paste0("Grafiki/Homog_normu_salidzinajums/Laikrindas/Monthly", stac, "_MeanTmon.png"))
+      geom_vline(data = metalines, aes(xintercept = Datums), linetype = "longdash", col = "dark green", size = 1)
+      # ggsave(paste0(Graph_loc, "/Yearly/", stac, "_MeanTyear.png"))
   }
   
   ygp <- ggplotly(yg)
@@ -234,10 +243,15 @@ for (stac in stacs) {
   }
   
   htmlwidgets::saveWidget(ygp, paste0(stac, "_MeanTyear.html"), selfcontained = T)
-  yg + ggsave(paste0(stac, "_MeanTyear.png"))
-  
+  yg + ggsave(paste0(Graph_loc, "/Yearly/", stac, "_MeanTyear.png"))
 }
 
+html_files <- list.files(pattern = ".html")
+nordir <- paste0(Graph_loc, "/Yearly")
+old_html_files <- list.files(nordir, pattern = "html", full.names = T)
+file.remove(old_html_files)
+file.copy(html_files, nordir)
+file.remove(html_files)
 
 # Linijas_pa_gadiem -------------------------------------------------------
 
