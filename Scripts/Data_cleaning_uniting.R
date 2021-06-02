@@ -45,6 +45,14 @@ r_starts <- function(data) {
     extract_start_date()
 }
 
+add_unregular_hour <- function(ur_data, h = 12) {
+  ur_data %>%
+    mutate(Datums_laiks = as_datetime(Datums),
+           Datums_laiks = `hour<-`(Datums_laiks, h)) %>% # Pieliek datumam stundu, 
+                                                         # lai saiet kopā ar pārējiem datiem
+    dplyr::select(-Datums)
+}
+
 cut_unregular_data <- function(ur_data, ur_data_starts) {
   # Cuts unregular data at the start points
   # ur_data           unregular data
@@ -56,16 +64,10 @@ cut_unregular_data <- function(ur_data, ur_data_starts) {
     Datums_end <- date(Datums_end)
     unregular_list[[i]] <- ur_data %>%
       filter(Stacija == Stac) %>%
-      filter(Datums < Datums_end)
+      filter(date(Datums_laiks) < Datums_end)
   }
   
   unregular_data_clean <- bind_rows(unregular_list)
-  
-  unregular_data_clean <- unregular_data_clean %>%
-    mutate(Datums_laiks = as_datetime(Datums),
-           Datums_laiks = `hour<-`(Datums_laiks, 12)) %>% # Pieliek datumam stundu, 
-                                                          # lai saiet kopā ar pārējiem datiem
-    dplyr::select(-Datums)
 }
 
 cut_term_data <- function(data, r_start, h_start) {
@@ -117,39 +119,55 @@ cut_hourly_data <- function(data, h_starts) {
 # metadati
 metadata <- read_rds("Dati/station_metadata.rds")
 
+TDRY_reg_data <- read_rds("Dati/TDRY_reg_export.rds")
+TDRY_unreg_data <- read_rds("Dati/TDRY_unreg_export.rds")
+HTDRY_unreg_data <- read_rds("Dati/HTDRY_unreg_export.rds")
+
 # Datu tīrīšana -----------------------------------------------------------
 
 # Mean T
-# TDRY_reg_data_cl <- TDRY_reg_data %>%
-#   clean_data(regular = "Y", filter_params = "AVG")
-# 
-# TDRY_unreg_data_cl <- TDRY_unreg_data %>%
-#   clean_data(regular = "N", filter_params = "AVG")
-# 
-# HTDRY_reg_data_cl <- HTDRY_unreg_data %>%
-#   clean_data(regular = "Y", filter_params = "AVG")
+TDRY_reg_data_cl <- TDRY_reg_data %>%
+  clean_data(regular = "Y", filter_params = "AVG")
+
+TDRY_unreg_data_cl <- TDRY_unreg_data %>%
+  clean_data(regular = "N", filter_params = "AVG")
+
+HTDRY_reg_data_cl <- HTDRY_unreg_data %>%
+  clean_data(regular = "Y", filter_params = "AVG")
 
 # Min T
-ATMN_reg_data_cl <- ATMN_reg_data %>%
-  clean_data(regular = "Y", filter_params = "MIN")
-ATMN_unreg_data_cl <- ATMN_unreg_data %>%
-  clean_data(regular = "N", filter_params = "MIN")
-HATMN_reg_data_cl <- HATMN_unreg_data %>%
-  clean_data(regular = "Y", filter_params = "MIN")
+# ATMN_reg_data_cl <- ATMN_reg_data %>%
+#   clean_data(regular = "Y", filter_params = "MIN")
+# ATMN_unreg_data_cl <- ATMN_unreg_data %>%
+#   clean_data(regular = "N", filter_params = "MIN")
+# HATMN_reg_data_cl <- HATMN_unreg_data %>%
+#   clean_data(regular = "Y", filter_params = "MIN")
 
+# Max T
+# ATMX_reg_data_cl <- ATMX_reg_data %>%
+#   clean_data(regular = "Y", filter_params = "MAX")
+# ATMX_unreg_data_cl <- ATMX_unreg_data %>%
+#   clean_data(regular = "N", filter_params = "MAX")
+# HATMX_reg_data_cl <- HATMX_unreg_data %>%
+#   clean_data(regular = "Y", filter_params = "MAX")
 
 
 # Šos parametrus maina atkarībā no parametra un pārējais skript aiziet ----
-parametrs <- "Min_T"
-term_par <- "ATMN"
+parametrs <- "Mean_T"
+term_par <- "TDRY"
 
-# reg_data_cl <- TDRY_reg_data_cl
-# unreg_data_cl <- TDRY_unreg_data_cl
-# h_data_cl <- HTDRY_reg_data_cl
+reg_data_cl <- TDRY_reg_data_cl
+unreg_data_cl <- TDRY_unreg_data_cl
+h_data_cl <- HTDRY_reg_data_cl
 
-reg_data_cl <- ATMN_reg_data_cl
-unreg_data_cl <- ATMN_unreg_data_cl
-h_data_cl <- HATMN_reg_data_cl
+# reg_data_cl <- ATMN_reg_data_cl
+# unreg_data_cl <- ATMN_unreg_data_cl
+# h_data_cl <- HATMN_reg_data_cl
+
+# reg_data_cl <- ATMX_reg_data_cl
+# unreg_data_cl <- ATMX_unreg_data_cl
+# h_data_cl <- HATMX_reg_data_cl
+
 
 
 # Ekstraktē sākuma un beigu datumus katram parametram ---------------------
@@ -161,13 +179,75 @@ Hpar_starts <- h_data_cl %>%
   H_starts()
 
 
-# Apvieno datu kopas ------------------------------------------------------
+# Pievieno stundu (Datums_laiks) unregular datiem -------------------------
 
-unreg_data_clean <- cut_unregular_data(unreg_data_cl, Rpar_starts)
+unreg_data_cl <- unreg_data_cl %>%
+  add_unregular_hour(h = 12)
+
+# Apvieno datu kopas ------------------------------------------------------
 
 term_data_clean <- cut_term_data(reg_data_cl, r_start = Rpar_starts,
                                  h_start = Hpar_starts)
 
+term_data_stacijas <- unique(term_data_clean$Stacija)
+
+term_data_filled_list <- list()
+  
+# Termiņiem pievieno iztrūkstošos mēnešus no unreg_data_clean
+
+for (i in seq_along(term_data_stacijas)) {
+  
+  menesu_term_dati <- term_data_clean %>%
+    filter(Stacija == term_data_stacijas[i])
+  menesu_mer <- menesu_term_dati %>% 
+    mutate(Gads = year(Datums_laiks), Menesis = month(Datums_laiks)) %>%
+    group_by(Gads, Menesis) %>%
+    summarise(Mer_sk_men = n())
+  
+  menesu_mer <- menesu_mer %>%
+    mutate(Datums = ymd(str_c(Gads, Menesis, "01", sep = "-")))
+  
+  monseq <- seq.Date(min(menesu_mer$Datums), max(menesu_mer$Datums),
+                     by = "month")
+  
+  monseq_df <- data.frame(Datums = monseq)
+  
+  menesi_trukst <- menesu_mer %>%
+    right_join(monseq_df) %>%
+    mutate(Gads = year(Datums),
+           Menesis = month(Datums),
+           Mer_sk_men = ifelse(is.na(Mer_sk_men), 0, Mer_sk_men)) %>%
+    filter(Mer_sk_men < 5) # Ja ir mazāk par 5 termiņiem mēnesī, skatās unregular datos
+  
+  
+  st_unreg_data <- unreg_data_cl %>%
+    filter(Stacija == term_data_stacijas[i]) %>%
+    mutate(Gads = year(Datums_laiks),
+           Menesis = month(Datums_laiks))
+  
+  yvec <- pull(menesi_trukst, Gads)
+  mvc <- pull(menesi_trukst, Menesis)
+  unreg_data_list <- list()
+  
+  for (j in seq_along(yvec)) {
+    unreg_data_list[[j]] <- st_unreg_data %>%
+      filter(Gads == yvec[j] & Menesis == mvc[j])
+  }
+  
+  fill_unreg_data_df <- unreg_data_list %>% 
+    bind_rows()
+  
+  if(nrow(fill_unreg_data_df > 0)) {
+    fill_unreg_data_df <- dplyr::select(fill_unreg_data_df, -Gads, -Menesis)
+  }
+    
+  term_data_filled_list[[i]] <- menesu_term_dati %>%
+    bind_rows(fill_unreg_data_df) %>%
+    arrange(Datums_laiks)
+}
+
+term_data_clean <- bind_rows(term_data_filled_list)
+unreg_data_clean <- cut_unregular_data(unreg_data_cl, Rpar_starts)
 hourly_data_clean <- cut_hourly_data(h_data_cl, h_starts = Hpar_starts)
 
 
