@@ -19,13 +19,13 @@ clean_data <- function(data, regular, filter_params = "AVG") {
     td <- data %>%
       filter(TIME == filter_params) %>%
       mutate(Datums = ymd(str_c(YEAR, MONTH, DAY, sep = "-"))) %>%
-      select(Stacija = EG_GH_ID, Parametrs = EG_EL_ABBREVIATION, Datums, Merijums = VALUE) %>%
+      dplyr::select(Stacija = EG_GH_ID, Parametrs = EG_EL_ABBREVIATION, Datums, Merijums = VALUE) %>%
       arrange(Stacija, Datums)
   } else if (regular == "Y") {
     data %>%
       filter(!TIME %in% filter_params) %>%
       mutate(Datums_laiks = ymd_hm(str_c(YEAR, MONTH, DAY, TIME, sep = "-"))) %>%
-      select(Stacija = EG_GH_ID, Parametrs = EG_EL_ABBREVIATION, Datums_laiks, Merijums = VALUE) %>%
+      dplyr::select(Stacija = EG_GH_ID, Parametrs = EG_EL_ABBREVIATION, Datums_laiks, Merijums = VALUE) %>%
       arrange(Stacija, Datums_laiks)
   }
 }
@@ -114,42 +114,80 @@ cut_hourly_data <- function(data, h_starts) {
   return(ddf)
 }
 
+remove_fake_unreg <- function(df_unreg, df_reg) {
+  # Finds fake unregular data (with legint time values in TIME column) and adds
+  # them to regular data frame
+  
+  fake_data <- df_unreg %>%
+    filter(str_detect(TIME, "\\d")) # Searches for TIME == digit
+  
+  Men_ir_unreg <- fake_data %>%
+    group_by(EG_GH_ID, YEAR, MONTH) %>%
+    summarise(Men_ir = !(sum(is.na(VALUE) / n()) == 1)) %>% # Vai mēnesī ir vismaz viens mērījums pret mērījumu skaitu?
+    filter(Men_ir == T)
+  
+  svec <- Men_ir_unreg$EG_GH_ID
+  yvec <- Men_ir_unreg$YEAR
+  mvec <- Men_ir_unreg$MONTH
+  
+  ureg_list <- list()
+  for (i in 1:length(svec)) {
+    ureg_list[[i]] <- fake_data %>%
+      filter(EG_GH_ID == svec[i] & YEAR == yvec[i] & MONTH == mvec[i])
+  }
+  
+  fake_data_df <- bind_rows(ureg_list)
+  
+  df_unreg <- filter(df_unreg, !str_detect(TIME, "\\d"))
+  df_reg <- bind_rows(df_reg, fake_data_df)
+  return(list("unreg" = df_unreg, "reg" = df_reg))
+}
+
 # Ielādē datus ------------------------------------------------------------
 
 # metadati
-metadata <- read_rds("Dati/station_metadata.rds")
-
-TDRY_reg_data <- read_rds("Dati/TDRY_reg_export.rds")
-TDRY_unreg_data <- read_rds("Dati/TDRY_unreg_export.rds")
-HTDRY_unreg_data <- read_rds("Dati/HTDRY_unreg_export.rds")
+# metadata <- read_rds("Dati/station_metadata.rds")
+# 
+# TDRY_reg_data <- read_rds("Dati/TDRY_reg_export.rds")
+# TDRY_unreg_data <- read_rds("Dati/TDRY_unreg_export.rds")
+# HTDRY_unreg_data <- read_rds("Dati/HTDRY_unreg_export.rds")
 
 # Datu tīrīšana -----------------------------------------------------------
 
 # Mean T
-TDRY_reg_data_cl <- TDRY_reg_data %>%
+TDRY_list <- remove_fake_unreg(TDRY_unreg_data, TDRY_reg_data)
+
+TDRY_reg_data_1 <- TDRY_list[[2]]
+TDRY_unreg_data_1 <- TDRY_list[[1]]
+
+TDRY_reg_data_cl <- TDRY_reg_data_1 %>%
   clean_data(regular = "Y", filter_params = "AVG")
-
-TDRY_unreg_data_cl <- TDRY_unreg_data %>%
+TDRY_unreg_data_cl <- TDRY_unreg_data_1 %>%
   clean_data(regular = "N", filter_params = "AVG")
-
 HTDRY_reg_data_cl <- HTDRY_unreg_data %>%
   clean_data(regular = "Y", filter_params = "AVG")
 
-# Min T
+# # Min T
 # ATMN_reg_data_cl <- ATMN_reg_data %>%
 #   clean_data(regular = "Y", filter_params = "MIN")
 # ATMN_unreg_data_cl <- ATMN_unreg_data %>%
 #   clean_data(regular = "N", filter_params = "MIN")
 # HATMN_reg_data_cl <- HATMN_unreg_data %>%
 #   clean_data(regular = "Y", filter_params = "MIN")
-
-# Max T
+# 
+# # Max T
 # ATMX_reg_data_cl <- ATMX_reg_data %>%
 #   clean_data(regular = "Y", filter_params = "MAX")
 # ATMX_unreg_data_cl <- ATMX_unreg_data %>%
 #   clean_data(regular = "N", filter_params = "MAX")
 # HATMX_reg_data_cl <- HATMX_unreg_data %>%
 #   clean_data(regular = "Y", filter_params = "MAX")
+
+# Nokrišņi
+# PRAB_reg_data_cl <- PRAB_reg_data %>% 
+#   clean_data(regular = "Y", filter_params = "SUM")
+# PRAB_unreg_data
+# HPRAB_reg_data
 
 
 # Šos parametrus maina atkarībā no parametra un pārējais skript aiziet ----
@@ -163,7 +201,7 @@ h_data_cl <- HTDRY_reg_data_cl
 # reg_data_cl <- ATMN_reg_data_cl
 # unreg_data_cl <- ATMN_unreg_data_cl
 # h_data_cl <- HATMN_reg_data_cl
-
+ 
 # reg_data_cl <- ATMX_reg_data_cl
 # unreg_data_cl <- ATMX_unreg_data_cl
 # h_data_cl <- HATMX_reg_data_cl
@@ -172,7 +210,6 @@ h_data_cl <- HTDRY_reg_data_cl
 
 # Ekstraktē sākuma un beigu datumus katram parametram ---------------------
 # Extract start date for Hourly parameters
-# Mean T
 Rpar_starts <- reg_data_cl %>%
   r_starts()
 Hpar_starts <- h_data_cl %>%
@@ -196,12 +233,13 @@ term_data_filled_list <- list()
 # Termiņiem pievieno iztrūkstošos mēnešus no unreg_data_clean
 
 for (i in seq_along(term_data_stacijas)) {
-  
+  # i <- 1
   menesu_term_dati <- term_data_clean %>%
     filter(Stacija == term_data_stacijas[i])
   menesu_mer <- menesu_term_dati %>% 
     mutate(Gads = year(Datums_laiks), Menesis = month(Datums_laiks)) %>%
     group_by(Gads, Menesis) %>%
+    filter(!is.na(Merijums)) %>%
     summarise(Mer_sk_men = n())
   
   menesu_mer <- menesu_mer %>%
@@ -213,7 +251,7 @@ for (i in seq_along(term_data_stacijas)) {
   monseq_df <- data.frame(Datums = monseq)
   
   menesi_trukst <- menesu_mer %>%
-    right_join(monseq_df) %>%
+    right_join(monseq_df) %>% 
     mutate(Gads = year(Datums),
            Menesis = month(Datums),
            Mer_sk_men = ifelse(is.na(Mer_sk_men), 0, Mer_sk_men)) %>%
@@ -259,6 +297,7 @@ term_data_stacijas <- unique(term_data_clean$Stacija)
 metadata <- read_rds("Dati/station_metadata.rds")
 
 for (i in seq_along(term_data_stacijas)) {
+  # i <- 1
   tdat <- metadata %>%
     filter(REGULAR == "Y" & EG_EL_ABBREVIATION == term_par) %>%
     filter(EG_GH_ID == term_data_stacijas[i]) %>%
@@ -285,6 +324,8 @@ for (i in seq_along(term_data_stacijas)) {
 }
 
 term_data_clean <- term_data_clean %>% arrange(Stacija, Datums_laiks)
+term_data_clean <- term_data_clean %>%
+  dplyr::select(-Gads, -Menesis)
 
 # Apvieno datu kopas ------------------------------------------------------
 # Apvieno datu kopas ar visiem pareizajiem NA
