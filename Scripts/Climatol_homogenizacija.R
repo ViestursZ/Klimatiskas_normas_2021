@@ -15,19 +15,24 @@ source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/Recode_stations.R",
 
 # Mainīgie ----------------------------------------------------------------
 
-parameter_climatol <- "MinT"
+parameter_climatol <- "MeanT"
 dataset_nm <- paste0("LV", parameter_climatol, "cor")
 
 
 # Sakārto datus -----------------------------------------------------------
 
 temp_daily <- temp_d
+# korig_temp_daily <- korig_temp_d_noDAGDA # Jaunie dati
+korig_temp_daily <- korig_temp_d
 
-korig_temp_daily <- korig_temp_d # Unikālās stacijas
+# Otrreizēja homogenizācija
+# korig_temp_daily <- read_csv2("Dati/CLIMATOL_homog_Mean_T.csv")
+# korig_temp_daily <- korig_temp_daily %>%
+#   gather(Stacija, Merijums, -Datums) %>%
+#   arrange(Stacija, Datums)
 
-data_stacs <- korig_temp_d$Stacija %>% unique()
+data_stacs <- korig_temp_daily$Stacija %>% unique()
 
-# Ielādē koordinātu datus priekš CLIMATOL
 visas_stacijas <- st_read("Dati/Stacijas_sampl_LKS_25_02_2020.gpkg")
 
 temp_stacs <- visas_stacijas %>%
@@ -42,12 +47,12 @@ temp_coords <- st_coordinates(temp_stacs) %>%
 
 climatol_temp_coords <- temp_stacs %>%
   bind_cols(temp_coords) %>%
-  select(GH_ID, ELEVATION, Lon, Lat) %>%
+  dplyr::select(GH_ID, ELEVATION, Lon, Lat) %>%
   as.data.frame()
 
 climatol_temp_coords <- climatol_temp_coords %>%
-  select(-geom) %>%
-  select(Lon, Lat, ELEVATION, GH_ID) %>%
+  dplyr::select(-geom) %>%
+  dplyr::select(Lon, Lat, ELEVATION, GH_ID) %>%
   mutate(Lon = round(Lon, 4),
          Lat = round(Lat, 4))
 
@@ -99,11 +104,20 @@ nevajag_clim_cor_stacs <- climatol_temp_cor_daily %>%
   filter(NA_skaits >= 11444) %>%
   pull(Stacija)
 
+# Homog stacijas
+homog_stacijas <- c("RIAI99PA", "RIAL99MS", "RIBA99PA", "RIDAGDA","RIDM99MS", "RIDO99MS",
+                    "RIGASLU", "RIGU99MS", "RIJE99PA", "RIKO99PA", "RILP99PA", "RIMADONA",
+                    "RIME99MS", "RIPA99PA", "RIPR99PA", "RIREZEKN", "RIRU99PA", "RISA99PA",
+                    "RISE99MS", "RISI99PA", "RIST99PA", "RIVE99PA", "RIZI99PA", "RIZO99MS", 
+                    "RUCAVA")
+
 climatol_temp_cor_daily <- climatol_temp_cor_daily %>%
-  filter(!Stacija %in% nevajag_clim_cor_stacs)
+  filter(!Stacija %in% nevajag_clim_cor_stacs) %>%
+  filter(Stacija %in% homog_stacijas)
 
 climatol_temp_cor_coords <- climatol_temp_coords %>%
-  filter(!GH_ID %in% nevajag_clim_cor_stacs)
+  filter(!GH_ID %in% nevajag_clim_cor_stacs) %>%
+  filter(GH_ID %in% homog_stacijas)
 
 
 
@@ -149,14 +163,33 @@ setwd("./Dati/Climatol_data")
 
 # No sākuma viens exploratory analysis run
 # homogen(dataset_nm, 1947, 2020, expl = T)
-# outrename(dataset_nm, 1947, 2020, "expl_analysis")
-
+# outrename(dataset_nm, 1947, 2020, "expl_analysis_noDAGDA")
 
 # Mēnešu sērijas, jo dienu sērijas utterly failoja
 dd2m(dataset_nm, 1947, 2020)
-homogen(paste0(dataset_nm, "-m"), 1947, 2020)
-homogen(dataset_nm, 1947, 2020, dz.max = 7, metad = T)
+
+# Exploration mēnešu sērijām
+homogen(paste0(dataset_nm, "-m"), 1947, 2020, expl = T)
+outrename(paste0(dataset_nm, "-m"), 1947, 2020, "_expl_analysis")
+# Default homogenization ar DAGDA
+homogen(paste0(dataset_nm, "-m"), 1947, 2020, dz.max = 8)
+homogen(dataset_nm, 1947, 2020, dz.max = 8)
+outrename(paste0(dataset_nm, "-m"), 1947, 2020, "arDAGDA")
 outrename(dataset_nm, 1947, 2020, "daily_monbrks_noDAGDA")
+
+# homogen(paste0(dataset_nm, "-m"), 1947, 2020, expl = T)
+# outrename(paste0(dataset_nm, "-m"), 1947, 2020, "expl_analysis_noDAGDA_m")
+
+
+# SNHT20 homogenization
+homogen(paste0(dataset_nm, "-m"), 1947, 2020, snht1 = 20)
+outrename(paste0(dataset_nm, "-m"), 1947, 2020, "noDAGDA_m_snht20")
+homogen(dataset_nm, 1947, 2020, dz.max = 9, metad = T)
+
+
+# Default homogenization
+homogen(dataset_nm, 1947, 2020, dz.max = 8)
+outrename(dataset_nm, 1947, 2020, "daily_monbrks_noDAGDA_snht20")
 
 setwd("../../")
 
