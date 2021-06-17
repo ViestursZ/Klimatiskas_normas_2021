@@ -13,27 +13,25 @@ source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/aggregation_funcs.r
 source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/Recode_stations.R", encoding = "UTF-8")
 
 # Ielādē sakārtotos temperatūras datus ------------------------------------
-parametrs <- "Min_T"
-temp_dati <- read_csv("Dati/Min_T_dati_clean.csv")
+parametrs <- "Max_T"
+temp_dati <- read_csv("Dati/Max_T_dati_clean.csv")
 
 
 # Ielādē ar iztrūkumiem aizvietotās stacijas ------------------------------
 # locale = locale(decimal_mark = ".", date_format = "%m/%d/%Y", time_format = "%H:%M"
 
-RIGASLU <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/MIN_RIGASLU_dati_VIESTURAM.csv",
+RIGASLU <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/max_RIGASLU_dati_VIESTURAM.csv",
                       delim = ",", col_types = "nnnnn")
 RIGASLU <- RIGASLU %>%
   transmute(DATE = ymd(str_c(YEAR, MONTH, DAY, sep = "-")),
             RIGASLU_new)
 
-
-DAGDA <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/MIN_RIDAGDA_dati_VIESTURAM.csv",
+DAGDA <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/max_RIDAGDA_dati_VIESTURAM.csv",
                     delim = ",", col_types = "nnnnn")
 DAGDA <- DAGDA %>%
   transmute(DATE = ymd(str_c(YEAR, MONTH, DAY, sep = "-")),
             RIDAGDA_new) %>% 
   arrange(DATE)
-
 
 
 # Izveido koriģēto datu kopu ----------------------------------------------
@@ -62,6 +60,7 @@ RIGASLU_korig <- korig_dati %>%
   bind_rows(RIGASLU) %>%
   arrange(Datums_laiks, Merijums)
 
+
 korig_dati <- korig_dati %>%
   filter(!Stacija %in% c("DAGDA", "RIDAGDA")) %>%
   bind_rows(DAGDA_korig) %>% 
@@ -71,6 +70,8 @@ korig_dati <- korig_dati %>%
 
 # Aprēķina diennakts datus ------------------------------------------------
 
+
+###### SAMĀINI FUNKCIJU ########
 
 ## PIESKAITA ZIEMAS LAIKU, aprēķina diennakts mininumus
 # temp_d <- temp_dati %>%
@@ -83,7 +84,7 @@ korig_temp_d <- korig_dati %>%
   mutate(Datums_laiks = Datums_laiks + hours(2)) %>% # LV ziemas laiks 
   mutate(Datums = date(Datums_laiks)) %>%
   group_by(Stacija, Datums) %>%
-  summarise(Merijums = round(f_min_na(Merijums, percentage_na = 0), 1))
+  summarise(Merijums = round(f_max_na(Merijums, percentage_na = 0), 1))
 
 # Ielādē datu pagarināšanas exceli, datu salīdzināšanai -------------------
 # temp_d_old <- read_excel("//dc03/pd/KMN/Projekti/Projekts-KLIMATS/DATU_Pagarinasana/Temperatura/Diennakts_vid_temperatura_1961-2020.xlsx")
@@ -129,10 +130,10 @@ temp_d <- temp_d %>%
 korig_temp_d <- spread(korig_temp_d, Stacija, Merijums)
 
 # Jāapvieno Dagdas un Rēzeknes
-temp_d <- temp_d %>%
-  mutate(RIREZEKN = ifelse(is.na(RIREZEKN), RIRE99MS, RIREZEKN)) %>%
-  mutate(RIDAGDA = ifelse(is.na(RIDAGDA), DAGDA, RIDAGDA)) %>%
-  select(-DAGDA, -RIRE99MS)
+# temp_d <- temp_d %>%
+#   mutate(RIREZEKN = ifelse(is.na(RIREZEKN), RIRE99MS, RIREZEKN)) %>%
+#   mutate(RIDAGDA = ifelse(is.na(RIDAGDA), DAGDA, RIDAGDA)) %>%
+#   select(-DAGDA, -RIRE99MS)
 
 korig_temp_d <- korig_temp_d %>%
   mutate(RIREZEKN = ifelse(is.na(RIREZEKN), RIRE99MS, RIREZEKN)) %>%
@@ -167,5 +168,6 @@ korig_temp_d %>%
   write_csv(paste0("Dati/", parametrs, "_daily_korig.csv"))
 korig_temp_d_noDAGDA %>%
   write_csv(paste0("Dati/", parametrs, "_daily_korig_noDAGDA.csv"))
+
 
 

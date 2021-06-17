@@ -14,58 +14,59 @@ source("D:/Viesturs_Zandersons/Scripts/Noderigas_R_funkcijas/Recode_stations.R",
 
 # Ielādē sakārtotos temperatūras datus ------------------------------------
 
-temp_dati <- read_csv("Dati/Temp_dati_clean.csv")
+temp_dati <- read_csv("Dati/Mean_T_dati_clean.csv")
 
 
 # Ielādē ar iztrūkumiem aizvietotās stacijas ------------------------------
 # locale = locale(decimal_mark = ".", date_format = "%m/%d/%Y", time_format = "%H:%M"
 
-RIGASLU <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/RIGASLU_atj_all_data_dek_koef.csv",
-                      delim = ",", col_types = "nnnnnnnn")
+RIGASLU <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/RIGASLU_dati_VIESTURAM.csv",
+                      delim = ",", col_types = "nnnnn")
 RIGASLU <- RIGASLU %>%
   transmute(DATE = ymd(str_c(YEAR, MONTH, DAY, sep = "-")),
             RIGASLU_new)
 
-MADONA <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/RIMADONA_atj_all_data_dek_koef.csv",
-                     delim = ",", col_types = "nnnnnnnnnn")
+MADONA <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/RIMADONA_dati_VIESTURAM.csv",
+                     delim = ",", col_types = "nnnnn")
 MADONA <- MADONA %>%
   transmute(DATE = ymd(str_c(YEAR, MONTH, DAY, sep = "-")),
             RIMADONA_new)
 
-DAGDA <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/DAGDA_visi_atj_max_min_LR.csv",
-                    delim = ",", col_types = paste0(rep("n", 11), collapse = ""))
+DAGDA <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/RIDAGDA_dati_VIESTURAM.csv",
+                    delim = ",", col_types = "nnnnn")
 DAGDA <- DAGDA %>%
   transmute(DATE = ymd(str_c(YEAR, MONTH, DAY, sep = "-")),
-            DAGDA_new)
+            RIDAGDA_new)
 
-REZEKNE <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/temp_REZEKNE_aiz.csv",
-                      delim = ";", col_types = "cn")
-REZEKNE <- REZEKNE %>%
-  mutate(DATE = mdy_hm(DATE))
+# REZEKNE <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/temp_REZEKNE_aiz.csv",
+#                       delim = ";", col_types = "cn")
+# REZEKNE <- REZEKNE %>%
+#   mutate(DATE = mdy_hm(DATE))
 
-RUCAVA <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/temp_RUCAVA_aiz.csv",
-                     delim = ";", col_types = "cn")
+RUCAVA <- read_delim("//dc03/pd/KMN/_KLIMATS/KLIMATISKAS_NORMAS/Jaunas_normas/Dati/atjaunotas_temp_datu_rindas/RUCAVA_dati_VIESTURAM.csv",
+                     delim = ",", col_types = "nnnnn")
 RUCAVA <- RUCAVA %>%
-  mutate(DATE = mdy_hm(DATE))
+  transmute(DATE = ymd(str_c(YEAR, MONTH, DAY, sep = "-")),
+            RUCAVA_new)
 
 
 # Izveido koriģēto datu kopu ----------------------------------------------
 
 DAGDA <- DAGDA %>% 
   mutate(Stacija = "DAGDA") %>%
-  rename(Datums_laiks = DATE, Merijums = DAGDA_new)
+  rename(Datums_laiks = DATE, Merijums = RIDAGDA_new)
 
 MADONA <- MADONA %>%
   mutate(Stacija = "RIMADONA") %>%
   rename(Datums_laiks = DATE, Merijums = RIMADONA_new)
 
 RIGASLU <- RIGASLU %>%
-  select(Datums_laiks = DATE, Merijums = RIGASLU_new) %>%
+  dplyr::select(Datums_laiks = DATE, Merijums = RIGASLU_new) %>%
   mutate(Stacija = "RIGASLU")
 
-REZEKNE <- REZEKNE %>%
-  mutate(Stacija = "RIREZEKN") %>%
-  rename(Datums_laiks = DATE, Merijums = Rezekne_atj)
+# REZEKNE <- REZEKNE %>%
+#   mutate(Stacija = "RIREZEKN") %>%
+#   rename(Datums_laiks = DATE, Merijums = Rezekne_atj)
 
 RUCAVA <- RUCAVA %>%
   mutate(Stacija = "RUCAVA") %>%
@@ -82,49 +83,44 @@ DAGDA_korig <- korig_dati %>%
   
 MADONA_korig <- korig_dati %>% 
   filter(Stacija %in% c("RIMADONA")) %>%
-  filter(Datums_laiks < ymd("1965-12-01")) %>%
+  filter(Datums_laiks < ymd("1923-10-01")) %>%
   bind_rows(MADONA) %>%
   arrange(Datums_laiks, Merijums)
 
 RIGASLU_korig <- korig_dati %>%
   filter(Stacija %in% c("RIGASLU")) %>%
-  filter(Datums_laiks < ymd("1814-07-01")) %>%
+  filter(Datums_laiks < ymd("1795-01-01")) %>%
   bind_rows(RIGASLU) %>%
   arrange(Datums_laiks, Merijums)
 
-REZEKNE_korig <- korig_dati %>%
-  filter(Stacija %in% c("RIRE99MS")) %>%
-  filter(year(Datums_laiks) < 1991) %>%
-  bind_rows(REZEKNE) %>%
-  arrange(Datums_laiks, Merijums) %>%
-  mutate(Stacija = "RIREZEKN")
+# REZEKNE_korig <- korig_dati %>%
+#   filter(Stacija %in% c("RIRE99MS")) %>%
+#   filter(year(Datums_laiks) < 1991) %>%
+#   bind_rows(REZEKNE) %>%
+#   arrange(Datums_laiks, Merijums) %>%
+#   mutate(Stacija = "RIREZEKN")
 
 RUCAVA_korig <- korig_dati %>%
   filter(Stacija %in% c("RUCAVA")) %>%
-  filter(year(Datums_laiks) < 1991) %>%
+  filter(Datums_laiks < ymd("1930-09-01")) %>%
   bind_rows(RUCAVA) %>%
   arrange(Datums_laiks, Merijums)
 
-  
+
 korig_dati <- korig_dati %>%
   filter(!Stacija %in% c("DAGDA", "RIDAGDA")) %>%
   bind_rows(DAGDA_korig) %>%
   filter(!Stacija %in% c("RIMADONA")) %>%
   bind_rows(MADONA_korig) %>%
-  filter(!Stacija %in% c("RIGASLU")) %>% # Atstāj RIAS99PA, lai pēcāk ievietotu laiku pirms 1991. g.
+  filter(!Stacija %in% c("RIGASLU", "RIAS99PA")) %>% 
   bind_rows(RIGASLU_korig) %>%
-  filter(!Stacija %in% c("RIRE99MS", "RIREZEKN")) %>%
-  bind_rows(REZEKNE_korig)  %>%
+  # filter(!Stacija %in% c("RIRE99MS", "RIREZEKN")) %>%
+  # bind_rows(REZEKNE_korig)  %>%
   filter(!Stacija == "RUCAVA") %>%
   bind_rows(RUCAVA_korig)
 
-# Izņem Dagdu -------------------------------------------------------------
-
-korig_dati <- korig_dati %>%
-  filter(Stacija != "RIDAGDA")
 
 # Aprēķina diennakts datus ------------------------------------------------
-
 
 ## PIESKAITA ZIEMAS LAIKU
 temp_d <- temp_dati %>%
@@ -177,40 +173,45 @@ korig_temp_d <- korig_temp_d %>%
 data_stacs <- temp_d %$% unique(Stacija)
 korig_stacs <- korig_temp_d %$% unique(Stacija)
 
-# Jāapvieno Rīgas
+# Spreado stacijas
 temp_d <- temp_d %>%
-  spread(Stacija, Merijums) %>%
-  mutate(RIGASLU = ifelse(is.na(RIGASLU), RIAS99PA, RIGASLU)) %>%
-  select(-RIAS99PA)
-
+  spread(Stacija, Merijums)
 korig_temp_d <- korig_temp_d %>%
-  spread(Stacija, Merijums) %>%
+  spread(Stacija, Merijums)
+
+# Nekoriģētajai temperatūrai jāapvieno Rīgas
+temp_d <- temp_d %>%
   mutate(RIGASLU = ifelse(is.na(RIGASLU), RIAS99PA, RIGASLU)) %>%
   select(-RIAS99PA)
 
-
-# Jāapvieno Dagdas un Rēzeknes
+# Nekoriģētajai temperatūrai jāapvieno Dagdas un Rēzeknes
 temp_d <- temp_d %>%
   mutate(RIREZEKN = ifelse(is.na(RIREZEKN), RIRE99MS, RIREZEKN)) %>%
   mutate(RIDAGDA = ifelse(is.na(RIDAGDA), DAGDA, RIDAGDA)) %>%
   select(-DAGDA, -RIRE99MS)
+
+# Koriģētajai temperatūrai jāapvieno Rēzeknes
+korig_temp_d <- korig_temp_d %>%
+  mutate(RIREZEKN = ifelse(is.na(RIREZEKN), RIRE99MS, RIREZEKN)) %>%
+  dplyr::select(-RIRE99MS)
 
 # Pievieno iztrūkstosos datumus
 iztr_dateseq <- seq(min(temp_d$Datums), max(temp_d$Datums),
                     by = "day")
 iztr_df <- data.frame(Datums = iztr_dateseq)
 
-temp_d <- temp_d %>% left_join(iztr_df, .,) %>%
+temp_d <- temp_d %>% 
+  left_join(iztr_df, .,) %>%
   gather(Stacija, Merijums, -Datums) 
 
 korig_temp_d <- korig_temp_d %>%
   left_join(iztr_df, .,) %>%
   gather(Stacija, Merijums, -Datums) 
 
- 
-data_stacs <- data_stacs[!data_stacs %in% c("RIAS99PA", "RIRE99MS", "DAGDA")]
-korig_stacs <- korig_stacs[!korig_stacs %in% c("RIAS99PA", "RIDAGDA")]
+# Izņem Dagdu no koriģētajioem datiem ---------------------------------------
 
+korig_temp_d_noDAGDA <- korig_temp_d %>%
+  filter(Stacija != "RIDAGDA")
 
 # Ieraksta jaunus csv failus ----------------------------------------------
 
@@ -220,5 +221,7 @@ korig_stacs <- korig_stacs[!korig_stacs %in% c("RIAS99PA", "RIDAGDA")]
 korig_temp_d %>%
   write_csv("Dati/MeanT_daily_korig.csv")
 
+korig_temp_d_noDAGDA %>%
+  write_csv("Dati/MeanT_daily_korig_noDAGDA.csv")
 
 
