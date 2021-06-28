@@ -50,32 +50,34 @@ normas_apr <- function(x, time, diennakts = T, fja){  # time jāliek diena = 1, 
 
 # Ielādē datus -------------------------------------------------------------
 
-# temp_daily <- read_csv("Dati/MeanT_daily.csv", col_types = c("D?n"))
-korig_temp_daily <- read_csv("Dati/MeanT_daily_korig.csv", col_types = c("D?n"))
+# temp_daily <- homog_all_correct
+temp_daily <- read_csv2("Dati/Mean_T_homog_FINAL_CLIMATOL_apvienots.csv")
+# korig_temp_daily <- read_csv("Dati/MeanT_daily_korig_noDAGDA.csv", col_types = "Dcn")
+# korig_temp_daily <- korig_temp_d_noDAGDA
 
 # Pārsauc kolonnas, lai normāli rēķinātos normas
 
 # RAW nekoriģēto temperatūras datu normas ---------------------------------
 
-# temp_daily <- temp_daily %>%
-#   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
-#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
-# 
-# uh_day_normal <- normas_apr(temp_daily, time = 1, fja = 0)
-# uh_dec_normal <- normas_apr(temp_daily, time = 2, fja = 0)
-# uh_month_normal <- normas_apr(temp_daily, time = 3, fja = 0)
-# uh_year_normal <- normas_apr(temp_daily, time = 4, fja = 0)
-
-
-# Koriģēto temperatūras datu normas ---------------------------------------
-korig_temp_daily <- korig_temp_daily %>%
+temp_daily <- temp_daily %>%
   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
 
-uh_day_korig_normal <- normas_apr(korig_temp_daily, time = 1, fja = 0)
-uh_dec_korig_normal <- normas_apr(korig_temp_daily, time = 2, fja = 0)
-uh_month_korig_normal <- normas_apr(korig_temp_daily, time = 3, fja = 0)
-uh_year_korig_normal <- normas_apr(korig_temp_daily, time = 4, fja = 0)
+uh_day_normal <- normas_apr(temp_daily, time = 1, fja = 0)
+uh_dec_normal <- normas_apr(temp_daily, time = 2, fja = 0)
+uh_month_normal <- normas_apr(temp_daily, time = 3, fja = 0)
+uh_year_normal <- normas_apr(temp_daily, time = 4, fja = 0)
+
+
+# Koriģēto temperatūras datu normas ---------------------------------------
+# korig_temp_daily <- korig_temp_daily %>%
+#   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# uh_day_korig_normal <- normas_apr(korig_temp_daily, time = 1, fja = 0)
+# uh_dec_korig_normal <- normas_apr(korig_temp_daily, time = 2, fja = 0)
+# uh_month_korig_normal <- normas_apr(korig_temp_daily, time = 3, fja = 0)
+# uh_year_korig_normal <- normas_apr(korig_temp_daily, time = 4, fja = 0)
 
 
 # ACMANT raw temperatūras norma -------------------------------------------
@@ -94,14 +96,14 @@ uh_year_korig_normal <- normas_apr(korig_temp_daily, time = 4, fja = 0)
 # ACMANT koriģētas temperatūras norma -------------------------------------
 
 # ACMANT normas
-ACMANT_kor_data_trn <- ACMANT_kor_data_t %>% # No format_ACMANT.R skripta
-  set_colnames(c("EG_GH_ID", "Value", "DATE")) %>%
-  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
-
-ac_day_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 1, fja = 0)
-ac_dec_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 2, fja = 0)
-ac_month_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 3, fja = 0)
-ac_year_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 4, fja = 0)
+# ACMANT_kor_data_trn <- ACMANT_kor_data_t %>% # No format_ACMANT.R skripta
+#   set_colnames(c("EG_GH_ID", "Value", "DATE")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# ac_day_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 1, fja = 0)
+# ac_dec_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 2, fja = 0)
+# ac_month_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 3, fja = 0)
+# ac_year_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 4, fja = 0)
 
 
 # Climatol raw temperatūras datu norma ------------------------------------
@@ -120,50 +122,114 @@ ac_year_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 4, fja = 0)
 
 # Climatol koriģētu temperatūras datu norma -------------------------------
 
-climatol_cor_homdata_trn <- climatol_cor_homdata %>%  # No Climatol_analysis.R
-  pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
-  set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
-  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# climatol_cor_homdata_trn <- climatol_cor_homdata %>%  # No Climatol_analysis.R
+#   pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
+#   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# clim_day_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 1, fja = 0)
+# clim_dec_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 2, fja = 0)
+# clim_month_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 3, fja = 0)
+# clim_year_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 4, fja = 0)
 
-clim_day_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 1, fja = 0)
-clim_dec_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 2, fja = 0)
-clim_month_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 3, fja = 0)
-clim_year_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 4, fja = 0)
+
+
+# 1981-2010 Normas --------------------------------------------------------
+# Koriģēto temperatūras datu normas ---------------------------------------
+# korig_temp_daily_old <- korig_temp_daily %>%
+#   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+#   filter(year(DATE) >= 1981 & year(DATE) <= 2010)
+# 
+# uh_day_korig_normal_old <- normas_apr(korig_temp_daily_old, time = 1, fja = 0)
+# uh_dec_korig_normal_old <- normas_apr(korig_temp_daily_old, time = 2, fja = 0)
+# uh_month_korig_normal_old <- normas_apr(korig_temp_daily_old, time = 3, fja = 0)
+# uh_year_korig_normal_old <- normas_apr(korig_temp_daily_old, time = 4, fja = 0)
+
+# Climatol koriģētu temperatūras datu norma -------------------------------
+
+# climatol_cor_homdata_trn_old <- climatol_cor_homdata %>%  # No Climatol_analysis.R
+#   pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
+#   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+#   filter(year(DATE) >= 1981 & year(DATE) <= 2010)
+# 
+# clim_day_korig_normal_old <- normas_apr(climatol_cor_homdata_trn_old, time = 1, fja = 0)
+# clim_dec_korig_normal_old <- normas_apr(climatol_cor_homdata_trn_old, time = 2, fja = 0)
+# clim_month_korig_normal_old <- normas_apr(climatol_cor_homdata_trn_old, time = 3, fja = 0)
+# clim_year_korig_normal_old <- normas_apr(climatol_cor_homdata_trn_old, time = 4, fja = 0)
+
 
 
 # MINIMĀLĀS NORMAS --------------------------------------------------------
 
 # Koriģēto temperatūras datu normas ---------------------------------------
-korig_temp_daily <- korig_temp_daily %>%
-  set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
-  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
-
-uh_day_korig_normal <- normas_apr(korig_temp_daily, time = 1, fja = -999)
-uh_dec_korig_normal <- normas_apr(korig_temp_daily, time = 2, fja = -999)
-uh_month_korig_normal <- normas_apr(korig_temp_daily, time = 3, fja = -999)
-uh_year_korig_normal <- normas_apr(korig_temp_daily, time = 4, fja = -999)
+# korig_temp_daily <- korig_temp_daily %>%
+#   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# uh_day_korig_normal <- normas_apr(korig_temp_daily, time = 1, fja = -999)
+# uh_dec_korig_normal <- normas_apr(korig_temp_daily, time = 2, fja = -999)
+# uh_month_korig_normal <- normas_apr(korig_temp_daily, time = 3, fja = -999)
+# uh_year_korig_normal <- normas_apr(korig_temp_daily, time = 4, fja = -999)
 
 # ACMANT koriģētas temperatūras norma -------------------------------------
 
 # ACMANT normas
-ACMANT_kor_data_trn <- ACMANT_kor_data_t %>% # No format_ACMANT.R skripta
-  set_colnames(c("EG_GH_ID", "Value", "DATE")) %>%
-  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
-
-ac_day_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 1, fja = -999)
-ac_dec_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 2, fja = -999)
-ac_month_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 3, fja = -999)
-ac_year_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 4, fja = -999)
+# ACMANT_kor_data_trn <- ACMANT_kor_data_t %>% # No format_ACMANT.R skripta
+#   set_colnames(c("EG_GH_ID", "Value", "DATE")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# ac_day_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 1, fja = -999)
+# ac_dec_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 2, fja = -999)
+# ac_month_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 3, fja = -999)
+# ac_year_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 4, fja = -999)
 
 # Climatol koriģētu temperatūras datu norma -------------------------------
 
-climatol_cor_homdata_trn <- climatol_cor_homdata %>%  # No Climatol_analysis.R
-  pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
-  set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
-  filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# climatol_cor_homdata_trn <- climatol_cor_homdata %>%  # No Climatol_analysis.R
+#   pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
+#   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# clim_day_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 1, fja = -999)
+# clim_dec_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 2, fja = -999)
+# clim_month_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 3, fja = -999)
+# clim_year_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 4, fja = -999)
 
-clim_day_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 1, fja = -999)
-clim_dec_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 2, fja = -999)
-clim_month_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 3, fja = -999)
-clim_year_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 4, fja = -999)
+
+# Maksimālā temperatūra ---------------------------------------------------
+
+
+# Koriģēto temperatūras datu normas ---------------------------------------
+# korig_temp_daily <- korig_temp_daily %>%
+#   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# uh_day_korig_normal <- normas_apr(korig_temp_daily, time = 1, fja = 999)
+# uh_dec_korig_normal <- normas_apr(korig_temp_daily, time = 2, fja = 999)
+# uh_month_korig_normal <- normas_apr(korig_temp_daily, time = 3, fja = 999)
+# uh_year_korig_normal <- normas_apr(korig_temp_daily, time = 4, fja = 999)
+
+# ACMANT koriģētas temperatūras norma -------------------------------------
+
+# ACMANT normas
+# ACMANT_kor_data_trn <- ACMANT_kor_data_t %>% # No format_ACMANT.R skripta
+#   set_colnames(c("EG_GH_ID", "Value", "DATE")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# ac_day_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 1, fja = 999)
+# ac_dec_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 2, fja = 999)
+# ac_month_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 3, fja = 999)
+# ac_year_korig_normal <- normas_apr(ACMANT_kor_data_trn, time = 4, fja = 999)
+
+# Climatol koriģētu temperatūras datu norma -------------------------------
+
+# climatol_cor_homdata_trn <- climatol_cor_homdata %>%  # No Climatol_analysis.R
+#   pivot_longer(-Datums, names_to = "EG_GH_ID", values_to = "Value") %>%
+#   set_colnames(c("DATE", "EG_GH_ID", "Value")) %>%
+#   filter(year(DATE) >= 1991 & year(DATE) <= 2020)
+# 
+# clim_day_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 1, fja = 999)
+# clim_dec_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 2, fja = 999)
+# clim_month_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 3, fja = 999)
+# clim_year_korig_normal <- normas_apr(climatol_cor_homdata_trn, time = 4, fja = 999)
 
